@@ -25,9 +25,7 @@ public class CreateEmployeeCommandHandler
         _mapper = mapper;
     }
 
-    public async Task<Guid> Handle(
-        CreateEmployeeCommand request,
-        CancellationToken cancellationToken)
+    public async Task<Guid> Handle(  CreateEmployeeCommand request, CancellationToken cancellationToken)
     {
         // Check Employee Code
         if (await _employeeReadRepository.AnyAsync(
