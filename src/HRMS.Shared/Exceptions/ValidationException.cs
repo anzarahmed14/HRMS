@@ -4,22 +4,10 @@ namespace HRMS.Shared.Exceptions;
 
 public class ValidationException : Exception
 {
-    public ValidationException()
-    {
-        Errors = new List<ApiError>();
-    }
+    public IDictionary<string, string[]> Errors { get; }
 
-    public ValidationException(string message)
-        : base(message)
-    {
-        Errors = new List<ApiError>();
-    }
-
-    public ValidationException(List<ApiError> errors)
-        : base("One or more validation errors occurred.")
+    public ValidationException(IDictionary<string, string[]> errors): base("One or more validation failures have occurred.")
     {
         Errors = errors;
     }
-
-    public List<ApiError> Errors { get; }
 }

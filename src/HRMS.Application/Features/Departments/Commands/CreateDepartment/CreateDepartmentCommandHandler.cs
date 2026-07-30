@@ -1,6 +1,7 @@
 using AutoMapper;
 using HRMS.Domain.Entities;
 using HRMS.Domain.Interfaces;
+using HRMS.Shared.Exceptions;
 using MediatR;
 
 namespace HRMS.Application.Features.Departments.Commands.CreateDepartment;
@@ -31,7 +32,7 @@ public class CreateDepartmentCommandHandler
             cancellationToken);
 
         if (exists)
-            throw new Exception("Department already exists.");
+            throw new ConflictException("Department already exists.");
 
         var department = _mapper.Map<Department>(request);
 

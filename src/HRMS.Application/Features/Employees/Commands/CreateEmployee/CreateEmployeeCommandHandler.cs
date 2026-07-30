@@ -1,6 +1,7 @@
 using AutoMapper;
 using HRMS.Domain.Entities;
 using HRMS.Domain.Interfaces;
+using HRMS.Shared.Exceptions;
 using MediatR;
 
 namespace HRMS.Application.Features.Employees.Commands.CreateEmployee;
@@ -44,13 +45,10 @@ public class CreateEmployeeCommandHandler
         }
 
         // Check Department
-        var department = await _departmentReadRepository.GetByIdAsync(
-            request.DepartmentId,
-            cancellationToken);
-
+        var department = await _departmentReadRepository.GetByIdAsync(   request.DepartmentId, cancellationToken);
         if (department is null)
         {
-            throw new Exception("Department not found.");
+            throw new NotFoundException("Department", request.DepartmentId);
         }
 
         // Mapping

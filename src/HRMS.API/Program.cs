@@ -2,7 +2,9 @@ using HRMS.API.Services;
 using HRMS.Application;
 using HRMS.Persistence.Extensions;
 using HRMS.Shared.Interfaces;
-
+using HRMS.API.Middleware;
+using MediatR;
+using HRMS.Application.Common.Behaviors;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -13,6 +15,8 @@ builder.Services.AddPersistence(builder.Configuration);
 builder.Services.AddScoped<IUserContext, CurrentUserContext>();
 builder.Services.AddPersistence(builder.Configuration);
 builder.Services.AddApplication();
+
+builder.Services.AddTransient( typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
 
 var app = builder.Build();
 
@@ -44,6 +48,9 @@ app.MapGet("/weatherforecast", () =>
     return forecast;
 })
 .WithName("GetWeatherForecast");
+
+app.UseMiddleware<ExceptionHandlingMiddleware>();
+
 app.MapControllers();
 app.Run();
 
