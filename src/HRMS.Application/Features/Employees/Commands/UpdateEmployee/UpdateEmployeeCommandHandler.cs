@@ -1,4 +1,5 @@
 using AutoMapper;
+using HRMS.Application.Features.Employees.BusinessRules;
 using HRMS.Domain.Entities;
 using HRMS.Domain.Interfaces;
 using MediatR;
@@ -10,18 +11,18 @@ public class UpdateEmployeeCommandHandler
 {
     private readonly IReadRepository<Employee, Guid> _employeeReadRepository;
     private readonly IWriteRepository<Employee, Guid> _employeeWriteRepository;
-    private readonly IReadRepository<Department, Guid> _departmentReadRepository;
+    private readonly EmployeeBusinessRules _employeeRules;
     private readonly IMapper _mapper;
 
     public UpdateEmployeeCommandHandler(
         IReadRepository<Employee, Guid> employeeReadRepository,
         IWriteRepository<Employee, Guid> employeeWriteRepository,
-        IReadRepository<Department, Guid> departmentReadRepository,
+        EmployeeBusinessRules employeeRules,
         IMapper mapper)
     {
         _employeeReadRepository = employeeReadRepository;
         _employeeWriteRepository = employeeWriteRepository;
-        _departmentReadRepository = departmentReadRepository;
+        _employeeRules = employeeRules;
         _mapper = mapper;
     }
 
@@ -29,38 +30,45 @@ public class UpdateEmployeeCommandHandler
         UpdateEmployeeCommand request,
         CancellationToken cancellationToken)
     {
+        // 1. Employee must exist
+        await _employeeRules.EnsureEmployeeExistsAsync(
+            request.Id,
+            cancellationToken);
+
+        // 2. Department must exist
+        await _employeeRules.EnsureDepartmentExistsAsync(
+            request.DepartmentId,
+            cancellationToken);
+
+        // 3. Employee code must be unique
+        await _employeeRules.EnsureEmployeeCodeUniqueAsync(
+            request.EmployeeCode,
+            request.Id,
+            cancellationToken);
+
+        // 4. Email must be unique
+        await _employeeRules.EnsureEmailUniqueAsync(
+            request.Email,
+            request.Id,
+            cancellationToken);
+
+        // 5. Get employee
         var employee = await _employeeReadRepository.GetByIdAsync(
             request.Id,
             cancellationToken);
 
+        // This should never be null because of EnsureEmployeeExistsAsync().
+        // Keeping the check protects us from unexpected changes.
         if (employee is null)
-            throw new Exception("Employee not found.");
+        {
+            throw new InvalidOperationException(
+                "Employee could not be loaded.");
+        }
 
-        var department = await _departmentReadRepository.GetByIdAsync(
-            request.DepartmentId,
-            cancellationToken);
-
-        if (department is null)
-            throw new Exception("Department not found.");
-
-        var employeeCodeExists = await _employeeReadRepository.AnyAsync(
-            x => x.EmployeeCode == request.EmployeeCode &&
-                 x.Id != request.Id,
-            cancellationToken);
-
-        if (employeeCodeExists)
-            throw new Exception("Employee code already exists.");
-
-        var emailExists = await _employeeReadRepository.AnyAsync(
-            x => x.Email == request.Email &&
-                 x.Id != request.Id,
-            cancellationToken);
-
-        if (emailExists)
-            throw new Exception("Email already exists.");
-
+        // 6. Map request → existing employee
         _mapper.Map(request, employee);
 
+        // 7. Update database
         await _employeeWriteRepository.UpdateAsync(
             employee,
             cancellationToken);

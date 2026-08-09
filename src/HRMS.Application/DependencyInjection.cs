@@ -1,5 +1,6 @@
 using FluentValidation;
 using HRMS.Application.Common.Behaviors;
+using HRMS.Application.Features.Employees.BusinessRules;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using System.Reflection;
@@ -27,6 +28,8 @@ public static class DependencyInjection
         services.AddTransient(
             typeof(IPipelineBehavior<,>),
             typeof(ValidationBehavior<,>));
+
+        services.AddScoped<EmployeeBusinessRules>();    
 
         return services;
     }

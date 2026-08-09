@@ -26,7 +26,17 @@ public class ExceptionHandlingMiddleware
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, ex.Message);
+           if (ex is BusinessException ||
+                ex is ConflictException ||
+                ex is NotFoundException ||
+                ex is ValidationException)
+            {
+                _logger.LogWarning(ex.Message);
+            }
+            else
+            {
+                _logger.LogError(ex, ex.Message);
+            }
 
             await HandleExceptionAsync(context, ex);
         }
