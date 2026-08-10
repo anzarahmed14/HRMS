@@ -1,0 +1,16 @@
+using HRMS.Shared.Entities;
+
+namespace HRMS.Domain.Entities;
+
+public class User:  AuditableEntity<Guid>
+{
+   public Guid EmployeeId { get; set; }
+
+    public string UserName { get; set; } = string.Empty;
+
+    public string PasswordHash { get; set; } = string.Empty;
+
+    public bool IsActive { get; set; } = true;
+
+    public Employee Employee { get; set; } = null!;
+}
