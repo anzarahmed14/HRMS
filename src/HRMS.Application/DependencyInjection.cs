@@ -1,5 +1,6 @@
 using FluentValidation;
 using HRMS.Application.Common.Behaviors;
+using HRMS.Application.Features.Departments.BusinessRules;
 using HRMS.Application.Features.Employees.BusinessRules;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
@@ -30,6 +31,7 @@ public static class DependencyInjection
             typeof(ValidationBehavior<,>));
 
         services.AddScoped<EmployeeBusinessRules>();    
+         services.AddScoped<DepartmentBusinessRules>();    
 
         return services;
     }

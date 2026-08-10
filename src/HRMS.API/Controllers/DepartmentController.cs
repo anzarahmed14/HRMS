@@ -1,4 +1,6 @@
 using HRMS.Application.Features.Departments.Commands.CreateDepartment;
+using HRMS.Application.Features.Departments.Queries.GetDepartmentById;
+using HRMS.Application.Features.Departments.Queries.GetDepartments;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
@@ -25,5 +27,30 @@ public class DepartmentController : ControllerBase
             cancellationToken);
 
         return Ok(id);
+    }
+    [HttpGet]
+    public async Task<IActionResult> GetAll(
+        CancellationToken cancellationToken)
+    {
+        var result = await _mediator.Send(
+            new GetDepartmentsQuery(),
+            cancellationToken);
+
+        return Ok(result);
+    }
+
+    [HttpGet("{id:guid}")]
+    public async Task<IActionResult> GetById(
+        Guid id,
+        CancellationToken cancellationToken)
+    {
+        var result = await _mediator.Send(
+            new GetDepartmentByIdQuery(id),
+            cancellationToken);
+
+        if (result is null)
+            return NotFound();
+
+        return Ok(result);
     }
 }

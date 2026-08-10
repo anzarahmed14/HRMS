@@ -1,7 +1,7 @@
 using AutoMapper;
+using HRMS.Application.Features.Departments.BusinessRules;
 using HRMS.Domain.Entities;
 using HRMS.Domain.Interfaces;
-using HRMS.Shared.Exceptions;
 using MediatR;
 
 namespace HRMS.Application.Features.Departments.Commands.CreateDepartment;
@@ -9,33 +9,31 @@ namespace HRMS.Application.Features.Departments.Commands.CreateDepartment;
 public class CreateDepartmentCommandHandler
     : IRequestHandler<CreateDepartmentCommand, Guid>
 {
-    private readonly IReadRepository<Department, Guid> _readRepository;
     private readonly IWriteRepository<Department, Guid> _writeRepository;
+    private readonly DepartmentBusinessRules _departmentRules;
     private readonly IMapper _mapper;
 
     public CreateDepartmentCommandHandler(
-        IReadRepository<Department, Guid> readRepository,
         IWriteRepository<Department, Guid> writeRepository,
+        DepartmentBusinessRules departmentRules,
         IMapper mapper)
     {
-        _readRepository = readRepository;
         _writeRepository = writeRepository;
+        _departmentRules = departmentRules;
         _mapper = mapper;
     }
 
-    public async Task<Guid> Handle(
-        CreateDepartmentCommand request,
-        CancellationToken cancellationToken)
+    public async Task<Guid> Handle(CreateDepartmentCommand request, CancellationToken cancellationToken)
     {
-        var exists = await _readRepository.AnyAsync(
-            x => x.Name == request.Name,
+        // Business Rule
+        await _departmentRules.EnsureDepartmentNameUniqueAsync(
+            request.Name,
             cancellationToken);
 
-        if (exists)
-            throw new ConflictException("Department already exists.");
-
+        // Map
         var department = _mapper.Map<Department>(request);
 
+        // Save
         await _writeRepository.AddAsync(
             department,
             cancellationToken);
