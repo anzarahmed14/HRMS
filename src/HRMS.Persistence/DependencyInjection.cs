@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
+
 namespace HRMS.Persistence;
 
 public static class DependencyInjection
@@ -20,6 +21,7 @@ public static class DependencyInjection
         services.AddScoped(typeof(IReadRepository<,>), typeof(BaseReadRepository<,>));
 
         services.AddScoped(typeof(IWriteRepository<,>), typeof(BaseWriteRepository<,>));
+      
 
         return services;
     }

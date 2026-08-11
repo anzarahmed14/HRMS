@@ -1,6 +1,8 @@
 using HRMS.Application.Features.Identity.Commands.CreateUser;
 using HRMS.Application.Features.Identity.Commands.Login;
+using HRMS.Shared.Interfaces;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace HRMS.API.Controllers;
@@ -10,10 +12,23 @@ namespace HRMS.API.Controllers;
 public class AuthController : ControllerBase
 {
     private readonly IMediator _mediator;
-
-    public AuthController(IMediator mediator)
+    private readonly IUserContext _userContext;
+    public AuthController(IMediator mediator, IUserContext userContext)
     {
         _mediator = mediator;
+        _userContext = userContext;
+    }
+    [Authorize]
+    [HttpGet("me")]
+    public IActionResult Me()
+    {
+        return Ok(new
+        {
+            UserId = _userContext.UserId,
+            EmployeeId = _userContext.EmployeeId,
+            UserName = _userContext.UserName,
+            IsAuthenticated = _userContext.IsAuthenticated
+        });
     }
 
     [HttpPost("users")]

@@ -1,0 +1,51 @@
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
+using HRMS.Application.Common.Interfaces;
+using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
+
+namespace HRMS.Infrastructure.Identity.Jwt;
+
+public class JwtTokenService : IJwtTokenService
+{
+    private readonly JwtOptions _options;
+
+    public JwtTokenService(IOptions<JwtOptions> options)
+    {
+        _options = options.Value;
+    }
+
+    public string GenerateToken(
+        Guid userId,
+        Guid employeeId,
+        string userName)
+    {
+        var claims = new List<Claim>
+        {
+            new(JwtRegisteredClaimNames.Sub, userId.ToString()),
+            new("userId", userId.ToString()),
+            new("employeeId", employeeId.ToString()),
+            new(ClaimTypes.Name, userName),
+            new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+        };
+
+        var key = new SymmetricSecurityKey(
+            Encoding.UTF8.GetBytes(_options.SecretKey));
+
+        var credentials = new SigningCredentials(
+            key,
+            SecurityAlgorithms.HmacSha256);
+
+        var token = new JwtSecurityToken(
+            issuer: _options.Issuer,
+            audience: _options.Audience,
+            claims: claims,
+            expires: DateTime.UtcNow.AddMinutes(
+                _options.ExpirationMinutes),
+            signingCredentials: credentials);
+
+        return new JwtSecurityTokenHandler()
+            .WriteToken(token);
+    }
+}

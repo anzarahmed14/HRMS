@@ -7,4 +7,6 @@ public class LoginResponseDto
     public Guid EmployeeId { get; set; }
 
     public string UserName { get; set; } = string.Empty;
+
+    public string AccessToken { get; set; } = string.Empty;
 }

@@ -1,8 +1,6 @@
 using HRMS.Application.Common.Interfaces;
 using HRMS.Application.Features.Identity.BusinessRules;
 using HRMS.Application.Features.Identity.DTOs;
-using HRMS.Domain.Entities;
-using HRMS.Domain.Interfaces;
 using HRMS.Shared.Exceptions;
 using MediatR;
 
@@ -13,25 +11,26 @@ public class LoginCommandHandler
 {
     private readonly IdentityBusinessRules _identityBusinessRules;
     private readonly IPasswordHasher _passwordHasher;
+    private readonly IJwtTokenService _jwtTokenService;
 
     public LoginCommandHandler(
         IdentityBusinessRules identityBusinessRules,
-        IPasswordHasher passwordHasher)
+        IPasswordHasher passwordHasher,
+        IJwtTokenService jwtTokenService)
     {
         _identityBusinessRules = identityBusinessRules;
         _passwordHasher = passwordHasher;
+        _jwtTokenService = jwtTokenService;
     }
 
     public async Task<LoginResponseDto> Handle(
         LoginCommand request,
         CancellationToken cancellationToken)
     {
-        // 1. Find user and make sure the account can login
         var user = await _identityBusinessRules.EnsureUserCanLoginAsync(
             request.UserName,
             cancellationToken);
 
-        // 2. Verify password
         var passwordValid = _passwordHasher.Verify(
             request.Password,
             user.PasswordHash);
@@ -42,12 +41,17 @@ public class LoginCommandHandler
                 "Invalid username or password.");
         }
 
-        // 3. Return authenticated user information
+        var accessToken = _jwtTokenService.GenerateToken(
+            user.Id,
+            user.EmployeeId,
+            user.UserName);
+
         return new LoginResponseDto
         {
             UserId = user.Id,
             EmployeeId = user.EmployeeId,
-            UserName = user.UserName
+            UserName = user.UserName,
+            AccessToken = accessToken
         };
     }
 }
