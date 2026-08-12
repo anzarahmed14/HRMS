@@ -2,7 +2,7 @@ using HRMS.Shared.Entities;
 
 namespace HRMS.Domain.Entities;
 
-public class Role : AuditableEntity<Guid>
+public class Permission : AuditableEntity<Guid>
 {
     public string Name { get; set; } = string.Empty;
 
@@ -10,9 +10,6 @@ public class Role : AuditableEntity<Guid>
 
     public bool IsActive { get; set; } = true;
 
-    public ICollection<UserRole> UserRoles { get; set; }
-        = new List<UserRole>();
-
-     public ICollection<RolePermission> RolePermissions { get; set; }
+    public ICollection<RolePermission> RolePermissions { get; set; }
         = new List<RolePermission>();
 }
