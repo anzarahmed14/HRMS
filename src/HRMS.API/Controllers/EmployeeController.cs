@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace HRMS.API.Controllers;
-[Authorize]
+[Authorize(Roles = "Employee")]
 [ApiController]
 [Route("api/[controller]")]
 public class EmployeeController : ControllerBase

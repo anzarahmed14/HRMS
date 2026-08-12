@@ -17,35 +17,41 @@ public class JwtTokenService : IJwtTokenService
     }
 
     public string GenerateToken(
-        Guid userId,
-        Guid employeeId,
-        string userName)
+    Guid userId,
+    Guid employeeId,
+    string userName,
+    IEnumerable<string> roles)
+{
+    var claims = new List<Claim>
     {
-        var claims = new List<Claim>
-        {
-            new(JwtRegisteredClaimNames.Sub, userId.ToString()),
-            new("userId", userId.ToString()),
-            new("employeeId", employeeId.ToString()),
-            new(ClaimTypes.Name, userName),
-            new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
-        };
+        new(JwtRegisteredClaimNames.Sub, userId.ToString()),
+        new("userId", userId.ToString()),
+        new("employeeId", employeeId.ToString()),
+        new(ClaimTypes.Name, userName),
+        new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+    };
 
-        var key = new SymmetricSecurityKey(
-            Encoding.UTF8.GetBytes(_options.SecretKey));
-
-        var credentials = new SigningCredentials(
-            key,
-            SecurityAlgorithms.HmacSha256);
-
-        var token = new JwtSecurityToken(
-            issuer: _options.Issuer,
-            audience: _options.Audience,
-            claims: claims,
-            expires: DateTime.UtcNow.AddMinutes(
-                _options.ExpirationMinutes),
-            signingCredentials: credentials);
-
-        return new JwtSecurityTokenHandler()
-            .WriteToken(token);
+    foreach (var role in roles)
+    {
+        claims.Add(new Claim(ClaimTypes.Role, role));
     }
+
+    var key = new SymmetricSecurityKey(
+        Encoding.UTF8.GetBytes(_options.SecretKey));
+
+    var credentials = new SigningCredentials(
+        key,
+        SecurityAlgorithms.HmacSha256);
+
+    var token = new JwtSecurityToken(
+        issuer: _options.Issuer,
+        audience: _options.Audience,
+        claims: claims,
+        expires: DateTime.UtcNow.AddMinutes(
+            _options.ExpirationMinutes),
+        signingCredentials: credentials);
+
+    return new JwtSecurityTokenHandler()
+        .WriteToken(token);
+}
 }

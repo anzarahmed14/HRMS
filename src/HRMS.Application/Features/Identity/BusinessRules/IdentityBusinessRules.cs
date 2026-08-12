@@ -8,14 +8,20 @@ public class IdentityBusinessRules
 {
     private readonly IReadRepository<Employee, Guid> _employeeRepository;
     private readonly IReadRepository<User, Guid> _userRepository;
+    private readonly IReadRepository<Role, Guid> _roleRepository;
 
-    public async Task<User> EnsureUserCanLoginAsync(
-        string userName,
-        CancellationToken cancellationToken = default)
+     public IdentityBusinessRules(
+        IReadRepository<Employee, Guid> employeeRepository,
+        IReadRepository<User, Guid> userRepository,IReadRepository<Role, Guid> roleRepository)
     {
-        var user = await _userRepository.FirstOrDefaultAsync(
-            x => x.UserName == userName,
-            cancellationToken);
+        _employeeRepository = employeeRepository;
+        _userRepository = userRepository;
+        _roleRepository = roleRepository;
+    }
+
+    public async Task<User> EnsureUserCanLoginAsync( string userName, CancellationToken cancellationToken = default)
+    {
+        var user = await _userRepository.FirstOrDefaultAsync(  x => x.UserName == userName, cancellationToken,  x => x.UserRoles);
 
         if (user is null)
         {
@@ -29,17 +35,29 @@ public class IdentityBusinessRules
                 "User account is inactive.");
         }
 
+        var roleIds = user.UserRoles
+            .Select(x => x.RoleId)
+            .ToList();
+
+        if (roleIds.Count == 0)
+        {
+            throw new UnauthorizedException(
+                "User has no role assigned.");
+        }
+
+        var roles = await _roleRepository.FindAsync(
+            x => roleIds.Contains(x.Id),
+            cancellationToken);
+
+        foreach (var userRole in user.UserRoles)
+        {
+            userRole.Role = roles.First(x => x.Id == userRole.RoleId);
+        }
+
         return user;
     }
 
-    public IdentityBusinessRules(
-        IReadRepository<Employee, Guid> employeeRepository,
-        IReadRepository<User, Guid> userRepository)
-    {
-        _employeeRepository = employeeRepository;
-        _userRepository = userRepository;
-    }
-
+   
     public async Task EnsureEmployeeExistsAsync(
         Guid employeeId,
         CancellationToken cancellationToken = default)

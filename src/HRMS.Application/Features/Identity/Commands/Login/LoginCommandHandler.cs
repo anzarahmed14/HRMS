@@ -23,17 +23,11 @@ public class LoginCommandHandler
         _jwtTokenService = jwtTokenService;
     }
 
-    public async Task<LoginResponseDto> Handle(
-        LoginCommand request,
-        CancellationToken cancellationToken)
+    public async Task<LoginResponseDto> Handle(  LoginCommand request,  CancellationToken cancellationToken)
     {
-        var user = await _identityBusinessRules.EnsureUserCanLoginAsync(
-            request.UserName,
-            cancellationToken);
+        var user = await _identityBusinessRules.EnsureUserCanLoginAsync(  request.UserName,  cancellationToken);
 
-        var passwordValid = _passwordHasher.Verify(
-            request.Password,
-            user.PasswordHash);
+        var passwordValid = _passwordHasher.Verify(  request.Password,  user.PasswordHash);
 
         if (!passwordValid)
         {
@@ -41,10 +35,13 @@ public class LoginCommandHandler
                 "Invalid username or password.");
         }
 
-        var accessToken = _jwtTokenService.GenerateToken(
-            user.Id,
-            user.EmployeeId,
-            user.UserName);
+        var roles = user.UserRoles  .Select(x => x.Role.Name)  .ToList();
+
+       var accessToken = _jwtTokenService.GenerateToken(
+        user.Id,
+        user.EmployeeId,
+        user.UserName,
+        roles);
 
         return new LoginResponseDto
         {
