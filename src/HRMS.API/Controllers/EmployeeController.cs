@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace HRMS.API.Controllers;
-[Authorize(Roles = "Employee")]
+//[Authorize(Roles = "Employee")]
 [ApiController]
 [Route("api/[controller]")]
 public class EmployeeController : ControllerBase
@@ -19,8 +19,8 @@ public class EmployeeController : ControllerBase
     {
         _mediator = mediator;
     }
-
     [HttpGet]
+    [Authorize(Policy = "Employee.View")]
     public async Task<IActionResult> GetAll(CancellationToken cancellationToken)
     {
         var result = await _mediator.Send(
