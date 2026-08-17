@@ -7,6 +7,7 @@ using HRMS.Modules.Department.Domain.Entities;
 
 using Microsoft.EntityFrameworkCore;
 using HRMS.Modules.Identity.Domain.Entities;
+using HRMS.Modules.Identity.Infrastructure.Configurations;
 namespace HRMS.Persistence.Context;
 
 public class ApplicationDbContext : DbContext
@@ -39,6 +40,8 @@ public class ApplicationDbContext : DbContext
         base.OnModelCreating(modelBuilder);
 
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(ApplicationDbContext).Assembly);
+
+        modelBuilder.ApplyConfigurationsFromAssembly( typeof(RolePermissionConfiguration).Assembly);
     }
     public override async Task<int> SaveChangesAsync(
         CancellationToken cancellationToken = default)

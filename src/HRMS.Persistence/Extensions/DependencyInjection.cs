@@ -1,4 +1,5 @@
-using HRMS.Domain.Interfaces;
+
+using HRMS.BuildingBlocks.Application.Abstractions.Persistence;
 using HRMS.Persistence.Context;
 using HRMS.Persistence.Repositories;
 using Microsoft.EntityFrameworkCore;

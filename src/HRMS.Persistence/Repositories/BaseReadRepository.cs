@@ -1,9 +1,9 @@
 using System.Linq.Expressions;
-using HRMS.Domain.Interfaces;
 using HRMS.Persistence.Context;
 using HRMS.BuildingBlocks.Domain.Entities;
 using HRMS.BuildingBlocks.Application.Pagination;
 using Microsoft.EntityFrameworkCore;
+using HRMS.BuildingBlocks.Application.Abstractions.Persistence;
 
 namespace HRMS.Persistence.Repositories;
 

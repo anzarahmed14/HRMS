@@ -1,15 +1,18 @@
 using HRMS.API.Services;
-using HRMS.Application;
-using HRMS.Persistence.Extensions;
 using HRMS.BuildingBlocks.Application.Abstractions;
 using HRMS.API.Middleware;
 using MediatR;
-using HRMS.Application.Common.Behaviors;
-using HRMS.Infrastructure;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using HRMS.Infrastructure.Identity.Jwt;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using HRMS.BuildingBlocks.Application.Behaviors;
+using HRMS.Modules.Identity.Application.Abstractions.Security;
+using HRMS.Modules.Employee.Application.DependencyInjection;
+using HRMS.Modules.Department.Application.DependencyInjection;
+using HRMS.Modules.Identity.Application.DependencyInjection;
+using HRMS.Modules.Identity.Infrastructure.DependencyInjection;
+using HRMS.Persistence.DependencyInjection;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -24,9 +27,21 @@ builder.Services.AddScoped<IUserContext>(
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 builder.Services.AddPersistence(builder.Configuration);
-builder.Services.AddApplication();
-builder.Services.AddInfrastructure(builder.Configuration);
+ //builder.Services.AddApplication();
+// builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddTransient( typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
+
+
+
+// Module Application registrations
+builder.Services.AddEmployeeApplication();
+builder.Services.AddDepartmentApplication();
+builder.Services.AddIdentityApplication();
+builder.Services.AddIdentityApplication();
+builder.Services.AddIdentityInfrastructure(builder.Configuration);
+
+// Identity Infrastructure registrations
+//builder.Services.AddIdentityInfrastructure();
 
 builder.Services
     .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)

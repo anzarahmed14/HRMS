@@ -1,9 +1,11 @@
 using FluentValidation;
 using MediatR;
-using HRMS.BuildingBlocks.Application.Exceptions;
-namespace HRMS.Application.Common.Behaviors;
 
-public class ValidationBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse> where TRequest : notnull
+namespace HRMS.BuildingBlocks.Application.Behaviors;
+
+public class ValidationBehavior<TRequest, TResponse>
+    : IPipelineBehavior<TRequest, TResponse>
+    where TRequest : notnull
 {
     private readonly IEnumerable<IValidator<TRequest>> _validators;
 
@@ -22,24 +24,18 @@ public class ValidationBehavior<TRequest, TResponse> : IPipelineBehavior<TReques
         {
             var context = new ValidationContext<TRequest>(request);
 
-            var results = await Task.WhenAll(
+            var validationResults = await Task.WhenAll(
                 _validators.Select(v =>
                     v.ValidateAsync(context, cancellationToken)));
 
-            var failures = results
-                .SelectMany(r => r.Errors)
-                .Where(f => f != null)
+            var failures = validationResults
+                .SelectMany(x => x.Errors)
+                .Where(x => x is not null)
                 .ToList();
 
             if (failures.Count != 0)
             {
-                var errors = failures
-                    .GroupBy(e => e.PropertyName)
-                    .ToDictionary(
-                        g => g.Key,
-                        g => g.Select(x => x.ErrorMessage).ToArray());
-
-                 throw new HRMS.BuildingBlocks.Application.Exceptions.ValidationException(errors);
+                throw new ValidationException(failures);
             }
         }
 
