@@ -1,6 +1,6 @@
 using HRMS.Domain.Interfaces;
 using HRMS.Persistence.Context;
-using HRMS.Shared.Entities;
+using HRMS.BuildingBlocks.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace HRMS.Persistence.Repositories;

@@ -1,13 +1,13 @@
 using HRMS.Application.Features.Employees.Commands.CreateEmployee;
-using HRMS.Application.Features.Employees.Commands.DeleteEmployee;
 using HRMS.Application.Features.Employees.Commands.UpdateEmployee;
 using HRMS.Application.Features.Employees.Queries.GetEmployeeById;
-using HRMS.Application.Features.Employees.Queries.GetEmployees;
+using HRMS.Modules.Employee.Application.Features.Employees.Queries.GetEmployees;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace HRMS.API.Controllers;
+
 //[Authorize(Roles = "Employee")]
 [ApiController]
 [Route("api/[controller]")]
@@ -19,9 +19,11 @@ public class EmployeeController : ControllerBase
     {
         _mediator = mediator;
     }
+
     [HttpGet]
     [Authorize(Policy = "Employee.View")]
-    public async Task<IActionResult> GetAll(CancellationToken cancellationToken)
+    public async Task<IActionResult> GetAll(
+        CancellationToken cancellationToken)
     {
         var result = await _mediator.Send(
             new GetEmployeesQuery(),
@@ -31,6 +33,7 @@ public class EmployeeController : ControllerBase
     }
 
     [HttpGet("{id:guid}")]
+    [Authorize(Policy = "Employee.View")]
     public async Task<IActionResult> GetById(
         Guid id,
         CancellationToken cancellationToken)
@@ -46,6 +49,7 @@ public class EmployeeController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Policy = "Employee.Create")]
     public async Task<IActionResult> Create(
         [FromBody] CreateEmployeeCommand command,
         CancellationToken cancellationToken)
@@ -61,6 +65,7 @@ public class EmployeeController : ControllerBase
     }
 
     [HttpPut("{id:guid}")]
+    [Authorize(Policy = "Employee.Update")]
     public async Task<IActionResult> Update(
         Guid id,
         [FromBody] UpdateEmployeeCommand command,
@@ -77,12 +82,13 @@ public class EmployeeController : ControllerBase
     }
 
     [HttpDelete("{id:guid}")]
+    [Authorize(Policy = "Employee.Delete")]
     public async Task<IActionResult> Delete(
         Guid id,
         CancellationToken cancellationToken)
     {
         await _mediator.Send(
-            new DeleteEmployeeCommand(id),
+            new Application.Features.Employees.Commands.DeleteEmployee.DeleteEmployeeCommand(id),
             cancellationToken);
 
         return NoContent();

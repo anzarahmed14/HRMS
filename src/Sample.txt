@@ -3,3 +3,8 @@
   "userName": "testuser",
   "password": "Password123"
 }
+
+{
+  "userName": "anzar",
+  "password": "Password123"
+}

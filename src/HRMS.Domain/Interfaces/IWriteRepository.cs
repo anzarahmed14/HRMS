@@ -1,4 +1,4 @@
-using HRMS.Shared.Entities;
+using HRMS.BuildingBlocks.Domain.Entities;
 
 namespace HRMS.Domain.Interfaces;
 

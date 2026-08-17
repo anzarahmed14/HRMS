@@ -1,8 +1,8 @@
 using System.Linq.Expressions;
 using HRMS.Domain.Interfaces;
 using HRMS.Persistence.Context;
-using HRMS.Shared.Entities;
-using HRMS.Shared.Models;
+using HRMS.BuildingBlocks.Domain.Entities;
+using HRMS.BuildingBlocks.Application.Pagination;
 using Microsoft.EntityFrameworkCore;
 
 namespace HRMS.Persistence.Repositories;

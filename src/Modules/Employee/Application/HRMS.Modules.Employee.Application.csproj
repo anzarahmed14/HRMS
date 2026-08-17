@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AutoMapper" Version="16.2.0" />
+    <PackageReference Include="FluentValidation" Version="12.1.1" />
+    <PackageReference Include="MediatR" Version="14.2.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\HRMS.BuildingBlocks\HRMS.BuildingBlocks.csproj" />
+    <ProjectReference Include="..\..\Department\Domain\HRMS.Modules.Department.Domain.csproj" />
+    <ProjectReference Include="..\Domain\HRMS.Modules.Employee.Domain.csproj" />
+  </ItemGroup>
+
+</Project>

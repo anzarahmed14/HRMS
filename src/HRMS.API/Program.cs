@@ -1,7 +1,7 @@
 using HRMS.API.Services;
 using HRMS.Application;
 using HRMS.Persistence.Extensions;
-using HRMS.Shared.Interfaces;
+using HRMS.BuildingBlocks.Application.Abstractions;
 using HRMS.API.Middleware;
 using MediatR;
 using HRMS.Application.Common.Behaviors;

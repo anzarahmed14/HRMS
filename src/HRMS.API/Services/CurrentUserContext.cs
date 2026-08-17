@@ -1,5 +1,5 @@
 using System.Security.Claims;
-using HRMS.Shared.Interfaces;
+using HRMS.BuildingBlocks.Application.Abstractions;
 
 namespace HRMS.API.Services;
 

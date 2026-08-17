@@ -1,6 +1,6 @@
-using HRMS.Domain.Entities;
-using HRMS.Domain.Interfaces;
-using HRMS.Shared.Interfaces;
+using HRMS.BuildingBlocks.Application.Abstractions;
+using HRMS.BuildingBlocks.Application.Abstractions.Persistence;
+using HRMS.Modules.Identity.Domain.Entities;
 using Microsoft.AspNetCore.Authorization;
 
 namespace HRMS.Infrastructure.Identity.Authorization;
@@ -36,9 +36,7 @@ public class PermissionAuthorizationHandler
 
         var user = await _userRepository.FirstOrDefaultAsync(
             x => x.Id == _userContext.UserId.Value,
-            context.Resource is null
-                ? CancellationToken.None
-                : CancellationToken.None,
+            CancellationToken.None,
             x => x.UserRoles);
 
         if (user is null)
@@ -72,8 +70,7 @@ public class PermissionAuthorizationHandler
         }
 
         var permissions = await _permissionRepository.FindAsync(
-            x => permissionIds.Contains(x.Id)
-                 && x.IsActive,
+            x => permissionIds.Contains(x.Id) && x.IsActive,
             CancellationToken.None);
 
         var hasPermission = permissions.Any(

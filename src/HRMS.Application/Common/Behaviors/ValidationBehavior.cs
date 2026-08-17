@@ -1,6 +1,6 @@
 using FluentValidation;
 using MediatR;
-using HRMS.Shared.Exceptions;
+using HRMS.BuildingBlocks.Application.Exceptions;
 namespace HRMS.Application.Common.Behaviors;
 
 public class ValidationBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse> where TRequest : notnull
@@ -39,7 +39,7 @@ public class ValidationBehavior<TRequest, TResponse> : IPipelineBehavior<TReques
                         g => g.Key,
                         g => g.Select(x => x.ErrorMessage).ToArray());
 
-                throw new HRMS.Shared.Exceptions.ValidationException(errors);
+                 throw new HRMS.BuildingBlocks.Application.Exceptions.ValidationException(errors);
             }
         }
 

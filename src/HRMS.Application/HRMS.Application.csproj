@@ -2,7 +2,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\HRMS.Domain\HRMS.Domain.csproj" />
-    <ProjectReference Include="..\HRMS.Shared\HRMS.Shared.csproj" />
   </ItemGroup>
 
   <ItemGroup>

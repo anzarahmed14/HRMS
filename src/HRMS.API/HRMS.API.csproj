@@ -19,7 +19,10 @@
     <ProjectReference Include="..\HRMS.Application\HRMS.Application.csproj" />
     <ProjectReference Include="..\HRMS.Infrastructure\HRMS.Infrastructure.csproj" />
     <ProjectReference Include="..\HRMS.Persistence\HRMS.Persistence.csproj" />
-    <ProjectReference Include="..\HRMS.Shared\HRMS.Shared.csproj" />
+    <ProjectReference Include="..\HRMS.BuildingBlocks\HRMS.BuildingBlocks.csproj" />
+    <ProjectReference Include="..\Modules\Department\Application\HRMS.Modules.Department.Application.csproj" />
+    <ProjectReference Include="..\Modules\Employee\Application\HRMS.Modules.Employee.Application.csproj" />
+    <ProjectReference Include="..\Modules\Identity\Application\HRMS.Modules.Identity.Application.csproj" />
   </ItemGroup>
 
 </Project>

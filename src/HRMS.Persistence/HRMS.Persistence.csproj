@@ -3,7 +3,9 @@
   <ItemGroup>
     <ProjectReference Include="..\HRMS.Domain\HRMS.Domain.csproj" />
     <ProjectReference Include="..\HRMS.Application\HRMS.Application.csproj" />
-    <ProjectReference Include="..\HRMS.Shared\HRMS.Shared.csproj" />
+    <ProjectReference Include="..\Modules\Employee\Domain\HRMS.Modules.Employee.Domain.csproj" />
+    <ProjectReference Include="..\Modules\Department\Domain\HRMS.Modules.Department.Domain.csproj" />
+    <ProjectReference Include="..\Modules\Identity\Domain\HRMS.Modules.Identity.Domain.csproj" />
   </ItemGroup>
 
   <ItemGroup>

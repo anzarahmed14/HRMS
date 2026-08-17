@@ -1,8 +1,12 @@
-using HRMS.Domain.Entities;
-using HRMS.Shared.Entities;
-using HRMS.Shared.Interfaces;
-using Microsoft.EntityFrameworkCore;
+using HRMS.BuildingBlocks.Domain.Entities;
+using HRMS.BuildingBlocks.Application.Abstractions;
 
+using HRMS.Modules.Employee.Domain.Entities;
+using HRMS.Modules.Department.Domain.Entities;
+
+
+using Microsoft.EntityFrameworkCore;
+using HRMS.Modules.Identity.Domain.Entities;
 namespace HRMS.Persistence.Context;
 
 public class ApplicationDbContext : DbContext

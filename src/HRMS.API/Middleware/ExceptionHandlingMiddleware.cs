@@ -1,7 +1,7 @@
 using System.Net;
 using System.Text.Json;
-using HRMS.Shared.Exceptions;
-using HRMS.Shared.Responses;
+using HRMS.BuildingBlocks.Application.Exceptions;
+using HRMS.API.Responses;
 
 namespace HRMS.API.Middleware;
 

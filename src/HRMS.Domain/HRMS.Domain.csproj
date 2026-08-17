@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
-    <ProjectReference Include="..\HRMS.Shared\HRMS.Shared.csproj" />
+    <ProjectReference Include="..\HRMS.BuildingBlocks\HRMS.BuildingBlocks.csproj" />
   </ItemGroup>
 
   <PropertyGroup>

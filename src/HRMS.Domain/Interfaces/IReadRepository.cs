@@ -1,5 +1,5 @@
 using System.Linq.Expressions;
-using HRMS.Shared.Models;
+using HRMS.BuildingBlocks.Application.Pagination;
 
 namespace HRMS.Domain.Interfaces;
 

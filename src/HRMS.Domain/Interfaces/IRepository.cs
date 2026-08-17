@@ -1,7 +1,7 @@
 namespace HRMS.Domain.Interfaces;
 
 using System.Linq.Expressions;
-using HRMS.Shared.Entities;
+using HRMS.BuildingBlocks.Domain.Entities;
 
 public interface IRepository<TEntity, TKey>
     where TEntity :  AuditableEntity<TKey>

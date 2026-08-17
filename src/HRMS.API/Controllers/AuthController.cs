@@ -1,6 +1,6 @@
-using HRMS.Application.Features.Identity.Commands.CreateUser;
-using HRMS.Application.Features.Identity.Commands.Login;
-using HRMS.Shared.Interfaces;
+using HRMS.BuildingBlocks.Application.Abstractions;
+using HRMS.Modules.Identity.Application.Features.Identity.Commands.CreateUser;
+using HRMS.Modules.Identity.Application.Features.Identity.Commands.Login;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

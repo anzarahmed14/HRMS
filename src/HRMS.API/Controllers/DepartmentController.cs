@@ -1,6 +1,6 @@
-using HRMS.Application.Features.Departments.Commands.CreateDepartment;
-using HRMS.Application.Features.Departments.Queries.GetDepartmentById;
-using HRMS.Application.Features.Departments.Queries.GetDepartments;
+using HRMS.Modules.Department.Application.Features.Departments.Commands.CreateDepartment;
+using HRMS.Modules.Department.Application.Features.Departments.Queries.GetDepartmentById;
+using HRMS.Modules.Department.Application.Features.Departments.Queries.GetDepartments;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
@@ -28,6 +28,7 @@ public class DepartmentController : ControllerBase
 
         return Ok(id);
     }
+
     [HttpGet]
     public async Task<IActionResult> GetAll(
         CancellationToken cancellationToken)
