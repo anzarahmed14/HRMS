@@ -5,6 +5,8 @@
     <ProjectReference Include="..\Modules\Department\Domain\HRMS.Modules.Department.Domain.csproj" />
     <ProjectReference Include="..\Modules\Identity\Domain\HRMS.Modules.Identity.Domain.csproj" />
     <ProjectReference Include="..\Modules\Identity\Infrastructure\HRMS.Modules.Identity.Infrastructure.csproj" />
+    <ProjectReference Include="..\Modules\Companies\Infrastructure\HRMS.Modules.Companies.Infrastructure.csproj" />
+    <ProjectReference Include="..\Modules\Leave\Infrastructure\HRMS.Modules.Leave.Infrastructure.csproj" />
   </ItemGroup>
 
   <ItemGroup>

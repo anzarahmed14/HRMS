@@ -8,6 +8,10 @@ using HRMS.Modules.Department.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using HRMS.Modules.Identity.Domain.Entities;
 using HRMS.Modules.Identity.Infrastructure.Configurations;
+using HRMS.Modules.Companies.Domain.Entities;
+using HRMS.Modules.Companies.Infrastructure.Configurations;
+using HRMS.Modules.Leave.Infrastructure.Configurations;
+using HRMS.Modules.Leave.Domain.Entities;
 namespace HRMS.Persistence.Context;
 
 public class ApplicationDbContext : DbContext
@@ -21,19 +25,32 @@ public class ApplicationDbContext : DbContext
     _userContext = userContext;
 }
 
-    public DbSet<Employee> Employees => Set<Employee>();
+  public DbSet<Employee> Employees => Set<Employee>();
 
-    public DbSet<Department> Departments => Set<Department>();
+public DbSet<Department> Departments => Set<Department>();
 
-     public DbSet<User> Users => Set<User>();
+public DbSet<User> Users => Set<User>();
 
-     public DbSet<Role> Roles => Set<Role>();
+public DbSet<Role> Roles => Set<Role>();
 
-    public DbSet<UserRole> UserRoles => Set<UserRole>();    
+public DbSet<UserRole> UserRoles => Set<UserRole>();
 
-    public DbSet<Permission> Permissions => Set<Permission>();
+public DbSet<Permission> Permissions => Set<Permission>();
 
-    public DbSet<RolePermission> RolePermissions => Set<RolePermission>();
+public DbSet<RolePermission> RolePermissions => Set<RolePermission>();
+
+public DbSet<LeaveYear> LeaveYears => Set<LeaveYear>();
+
+public DbSet<LeaveYearStatus> LeaveYearStatuses => Set<LeaveYearStatus>();
+
+public DbSet<LeaveType> LeaveTypes => Set<LeaveType>();
+
+public DbSet<LeavePolicy> LeavePolicies => Set<LeavePolicy>();
+
+public DbSet<LeavePolicyRule> LeavePolicyRules => Set<LeavePolicyRule>();
+
+public DbSet<EmployeeLeaveEntitlement> EmployeeLeaveEntitlements
+    => Set<EmployeeLeaveEntitlement>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -42,6 +59,12 @@ public class ApplicationDbContext : DbContext
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(ApplicationDbContext).Assembly);
 
         modelBuilder.ApplyConfigurationsFromAssembly( typeof(RolePermissionConfiguration).Assembly);
+
+        modelBuilder.ApplyConfigurationsFromAssembly(typeof(CompanyConfiguration).Assembly);
+
+            // Leave configurations
+      modelBuilder.ApplyConfigurationsFromAssembly(
+        typeof(LeaveYearConfiguration).Assembly);
     }
     public override async Task<int> SaveChangesAsync(
         CancellationToken cancellationToken = default)

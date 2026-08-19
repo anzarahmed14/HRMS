@@ -12,6 +12,9 @@ using HRMS.Modules.Department.Application.DependencyInjection;
 using HRMS.Modules.Identity.Application.DependencyInjection;
 using HRMS.Modules.Identity.Infrastructure.DependencyInjection;
 using HRMS.Persistence.DependencyInjection;
+using HRMS.Modules.Companies.Application.DependencyInjection;
+using HRMS.Modules.Leave.Application.DependencyInjection;
+using HRMS.Modules.Leave.Infrastructure.DependencyInjection;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -33,12 +36,14 @@ builder.Services.AddTransient( typeof(IPipelineBehavior<,>), typeof(ValidationBe
 
 
 
-// Module Application registrations
 builder.Services.AddEmployeeApplication();
 builder.Services.AddDepartmentApplication();
 builder.Services.AddIdentityApplication();
-builder.Services.AddIdentityApplication();
+builder.Services.AddCompaniesApplication();
 builder.Services.AddIdentityInfrastructure(builder.Configuration);
+
+builder.Services.AddLeaveApplication();
+builder.Services.AddLeaveInfrastructure();
 
 // Identity Infrastructure registrations
 //builder.Services.AddIdentityInfrastructure();
