@@ -32,13 +32,15 @@ public class LeavePolicyConfiguration
             x.CompanyId,
             x.Code
         })
-        .IsUnique();
+.IsUnique()
+.HasFilter("[IsDeleted] = 0");
 
         builder.HasIndex(x => new
         {
             x.CompanyId,
             x.Name
         })
-        .IsUnique();
+        .IsUnique()
+        .HasFilter("[IsDeleted] = 0");
     }
 }

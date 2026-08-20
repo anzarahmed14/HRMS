@@ -49,8 +49,17 @@ public DbSet<LeavePolicy> LeavePolicies => Set<LeavePolicy>();
 
 public DbSet<LeavePolicyRule> LeavePolicyRules => Set<LeavePolicyRule>();
 
-public DbSet<EmployeeLeaveEntitlement> EmployeeLeaveEntitlements
+    public DbSet<LeaveRequestStatus> LeaveRequestStatuses
+        => Set<LeaveRequestStatus>();
+
+    public DbSet<EmployeeLeaveEntitlement> EmployeeLeaveEntitlements
     => Set<EmployeeLeaveEntitlement>();
+
+    public DbSet<LeaveDayPart> LeaveDayParts
+    => Set<LeaveDayPart>();
+
+    public DbSet<LeaveRequest> LeaveRequests
+    => Set<LeaveRequest>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

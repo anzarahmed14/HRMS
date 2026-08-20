@@ -2,8 +2,10 @@ using HRMS.Modules.Leave.Application.Features.LeaveTypes.Commands.CreateLeaveTyp
 using HRMS.Modules.Leave.Application.Features.LeaveTypes.Commands.UpdateLeaveType;
 using HRMS.Modules.Leave.Application.Features.LeaveTypes.Commands.DeleteLeaveType;
 using HRMS.Modules.Leave.Application.Features.LeaveTypes.Queries.GetLeaveTypeById;
+using HRMS.Modules.Leave.Application.Features.LeaveTypes.Queries.GetLeaveTypes;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using HRMS.BuildingBlocks.Application.Pagination;
 
 namespace HRMS.API.Controllers;
 
@@ -69,6 +71,18 @@ public class LeaveTypeController : ControllerBase
 
         return Ok(result);
     }
+    [HttpGet]
+    public async Task<IActionResult> GetAll(
+        [FromQuery] PagedRequest request,
+        CancellationToken cancellationToken)
+    {
+        var result = await _mediator.Send(
+            new GetLeaveTypesQuery(request),
+            cancellationToken);
+
+        return Ok(result);
+    }
 }
+
 
 

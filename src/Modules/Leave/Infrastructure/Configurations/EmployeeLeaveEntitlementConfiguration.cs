@@ -17,13 +17,19 @@ public class EmployeeLeaveEntitlementConfiguration
             .IsRequired()
             .HasPrecision(18, 2);
 
+        builder.Property(x => x.UsedDays)
+            .IsRequired()
+            .HasPrecision(18, 2)
+            .HasDefaultValue(0);
+
         builder.HasIndex(x => new
         {
             x.EmployeeId,
             x.LeaveYearId,
             x.LeaveTypeId
         })
-        .IsUnique();
+        .IsUnique()
+        .HasFilter("[IsDeleted] = 0");
 
         builder.HasOne<LeaveYear>()
             .WithMany()

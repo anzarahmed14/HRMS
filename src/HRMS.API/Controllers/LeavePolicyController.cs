@@ -2,8 +2,10 @@ using HRMS.Modules.Leave.Application.Features.LeavePolicies.Commands.CreateLeave
 using HRMS.Modules.Leave.Application.Features.LeavePolicies.Commands.UpdateLeavePolicy;
 using HRMS.Modules.Leave.Application.Features.LeavePolicies.Commands.DeleteLeavePolicy;
 using HRMS.Modules.Leave.Application.Features.LeavePolicies.Queries.GetLeavePolicyById;
+using HRMS.Modules.Leave.Application.Features.LeavePolicies.Queries.GetLeavePolicies;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using HRMS.BuildingBlocks.Application.Pagination;
 
 namespace HRMS.API.Controllers;
 
@@ -69,6 +71,18 @@ public class LeavePolicyController : ControllerBase
 
         return Ok(result);
     }
+    [HttpGet]
+    public async Task<IActionResult> GetAll(
+        [FromQuery] PagedRequest request,
+        CancellationToken cancellationToken)
+    {
+        var result = await _mediator.Send(
+            new GetLeavePoliciesQuery(request),
+            cancellationToken);
+
+        return Ok(result);
+    }
 }
+
 
 

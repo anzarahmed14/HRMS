@@ -1,8 +1,9 @@
 using FluentValidation;
 using HRMS.BuildingBlocks.Application.Behaviors;
 using HRMS.Modules.Leave.Application.Features.EmployeeLeaveEntitlements.BusinessRules;
-using HRMS.Modules.Leave.Application.Features.LeavePolicyRules.BusinessRules;
 using HRMS.Modules.Leave.Application.Features.LeavePolicies.BusinessRules;
+using HRMS.Modules.Leave.Application.Features.LeavePolicyRules.BusinessRules;
+using HRMS.Modules.Leave.Application.Features.LeaveRequests.BusinessRules;
 using HRMS.Modules.Leave.Application.Features.LeaveTypes.BusinessRules;
 using HRMS.Modules.Leave.Application.Features.LeaveYears.BusinessRules;
 using MediatR;
@@ -39,7 +40,7 @@ public static class DependencyInjection
         services.AddScoped<LeavePolicyBusinessRules>();
         services.AddScoped<LeavePolicyRuleBusinessRules>();
         services.AddScoped<EmployeeLeaveEntitlementBusinessRules>();
-
+        services.AddScoped<LeaveRequestBusinessRules>();
         return services;
     }
 }

@@ -1,13 +1,14 @@
 using System.Linq.Expressions;
-using HRMS.Persistence.Context;
-using HRMS.BuildingBlocks.Domain.Entities;
-using HRMS.BuildingBlocks.Application.Pagination;
-using Microsoft.EntityFrameworkCore;
 using HRMS.BuildingBlocks.Application.Abstractions.Persistence;
+using HRMS.BuildingBlocks.Application.Pagination;
+using HRMS.BuildingBlocks.Domain.Entities;
+using HRMS.Persistence.Context;
+using Microsoft.EntityFrameworkCore;
 
 namespace HRMS.Persistence.Repositories;
 
-public class BaseReadRepository<TEntity, TKey> : IReadRepository<TEntity, TKey>
+public class BaseReadRepository<TEntity, TKey>
+    : IReadRepository<TEntity, TKey>
     where TEntity : AuditableEntity<TKey>
 {
     protected readonly ApplicationDbContext _context;
@@ -19,11 +20,12 @@ public class BaseReadRepository<TEntity, TKey> : IReadRepository<TEntity, TKey>
         _dbSet = context.Set<TEntity>();
     }
 
-    public async Task<TEntity?> GetByIdAsync(TKey id, CancellationToken cancellationToken = default, params Expression<Func<TEntity, object>>[] includes)
+    public async Task<TEntity?> GetByIdAsync(
+        TKey id,
+        CancellationToken cancellationToken = default,
+        params Expression<Func<TEntity, object>>[] includes)
     {
-        IQueryable<TEntity> query = _dbSet.AsNoTracking();
-
-        query = ApplyIncludes(query, includes);
+        IQueryable<TEntity> query = CreateQuery(includes);
 
         return await query.FirstOrDefaultAsync(
             e => EF.Property<TKey>(e, "Id")!.Equals(id),
@@ -31,22 +33,20 @@ public class BaseReadRepository<TEntity, TKey> : IReadRepository<TEntity, TKey>
     }
 
     public async Task<IEnumerable<TEntity>> GetAllAsync(
-         CancellationToken cancellationToken = default,
-         params Expression<Func<TEntity, object>>[] includes)
+        CancellationToken cancellationToken = default,
+        params Expression<Func<TEntity, object>>[] includes)
     {
-        IQueryable<TEntity> query = _dbSet.AsNoTracking();
-
-        query = ApplyIncludes(query, includes);
+        IQueryable<TEntity> query = CreateQuery(includes);
 
         return await query.ToListAsync(cancellationToken);
     }
 
-    public async Task<IEnumerable<TEntity>> FindAsync(Expression<Func<TEntity, bool>> predicate, CancellationToken cancellationToken = default,
-    params Expression<Func<TEntity, object>>[] includes)
+    public async Task<IEnumerable<TEntity>> FindAsync(
+        Expression<Func<TEntity, bool>> predicate,
+        CancellationToken cancellationToken = default,
+        params Expression<Func<TEntity, object>>[] includes)
     {
-        IQueryable<TEntity> query = _dbSet.AsNoTracking();
-
-        query = ApplyIncludes(query, includes);
+        IQueryable<TEntity> query = CreateQuery(includes);
 
         return await query
             .Where(predicate)
@@ -58,11 +58,11 @@ public class BaseReadRepository<TEntity, TKey> : IReadRepository<TEntity, TKey>
         CancellationToken cancellationToken = default,
         params Expression<Func<TEntity, object>>[] includes)
     {
-        IQueryable<TEntity> query = _dbSet.AsNoTracking();
+        IQueryable<TEntity> query = CreateQuery(includes);
 
-        query = ApplyIncludes(query, includes);
-
-        return await query.FirstOrDefaultAsync(predicate, cancellationToken);
+        return await query.FirstOrDefaultAsync(
+            predicate,
+            cancellationToken);
     }
 
     public async Task<bool> AnyAsync(
@@ -70,6 +70,7 @@ public class BaseReadRepository<TEntity, TKey> : IReadRepository<TEntity, TKey>
         CancellationToken cancellationToken = default)
     {
         return await _dbSet
+            .Where(x => !x.IsDeleted)
             .AnyAsync(predicate, cancellationToken);
     }
 
@@ -77,17 +78,75 @@ public class BaseReadRepository<TEntity, TKey> : IReadRepository<TEntity, TKey>
         Expression<Func<TEntity, bool>>? predicate = null,
         CancellationToken cancellationToken = default)
     {
-        if (predicate == null)
+        IQueryable<TEntity> query = _dbSet
+            .AsNoTracking()
+            .Where(x => !x.IsDeleted);
+
+        if (predicate is not null)
         {
-            return await _dbSet.CountAsync(cancellationToken);
+            query = query.Where(predicate);
         }
 
-        return await _dbSet.CountAsync(predicate, cancellationToken);
+        return await query.CountAsync(cancellationToken);
     }
 
-    private IQueryable<TEntity> ApplyIncludes(
-    IQueryable<TEntity> query,
-    params Expression<Func<TEntity, object>>[] includes)
+    public async Task<PagedResult<TEntity>> GetPagedAsync(
+        PagedRequest request,
+        Expression<Func<TEntity, bool>>? predicate = null,
+        Func<IQueryable<TEntity>, IOrderedQueryable<TEntity>>? orderBy = null,
+        CancellationToken cancellationToken = default,
+        params Expression<Func<TEntity, object>>[] includes)
+    {
+        IQueryable<TEntity> query = CreateQuery(includes);
+
+        if (predicate is not null)
+        {
+            query = query.Where(predicate);
+        }
+
+        var totalRecords = await query.CountAsync(cancellationToken);
+
+        if (orderBy is not null)
+        {
+            query = orderBy(query);
+        }
+        else if (!string.IsNullOrWhiteSpace(request.SortBy))
+        {
+            query = request.Descending
+                ? query.OrderByDescending(
+                    e => EF.Property<object>(e, request.SortBy!))
+                : query.OrderBy(
+                    e => EF.Property<object>(e, request.SortBy!));
+        }
+
+        query = query
+            .Skip((request.PageNumber - 1) * request.PageSize)
+            .Take(request.PageSize);
+
+        var items = await query.ToListAsync(cancellationToken);
+
+        return new PagedResult<TEntity>
+        {
+            Items = items,
+            TotalRecords = totalRecords,
+            PageNumber = request.PageNumber,
+            PageSize = request.PageSize
+        };
+    }
+
+    private IQueryable<TEntity> CreateQuery(
+        params Expression<Func<TEntity, object>>[] includes)
+    {
+        IQueryable<TEntity> query = _dbSet
+            .AsNoTracking()
+            .Where(x => !x.IsDeleted);
+
+        return ApplyIncludes(query, includes);
+    }
+
+    private static IQueryable<TEntity> ApplyIncludes(
+        IQueryable<TEntity> query,
+        params Expression<Func<TEntity, object>>[] includes)
     {
         foreach (var include in includes)
         {
@@ -96,54 +155,4 @@ public class BaseReadRepository<TEntity, TKey> : IReadRepository<TEntity, TKey>
 
         return query;
     }
-
-   public async Task<PagedResult<TEntity>> GetPagedAsync(
-    PagedRequest request,
-    Expression<Func<TEntity, bool>>? predicate = null,
-    Func<IQueryable<TEntity>, IOrderedQueryable<TEntity>>? orderBy = null,
-    CancellationToken cancellationToken = default,
-    params Expression<Func<TEntity, object>>[] includes)
-{
-    IQueryable<TEntity> query = _dbSet.AsNoTracking();
-
-    // Apply Includes
-    query = ApplyIncludes(query, includes);
-
-    // Apply Filter
-    if (predicate is not null)
-    {
-        query = query.Where(predicate);
-    }
-
-    // Total Records before Paging
-    var totalRecords = await query.CountAsync(cancellationToken);
-
-    // Apply Sorting
-    if (orderBy is not null)
-    {
-        query = orderBy(query);
-    }
-    else if (!string.IsNullOrWhiteSpace(request.SortBy))
-    {
-        query = request.Descending
-            ? query.OrderByDescending(e => EF.Property<object>(e, request.SortBy!))
-            : query.OrderBy(e => EF.Property<object>(e, request.SortBy!));
-    }
-
-    // Apply Paging
-    query = query
-        .Skip((request.PageNumber - 1) * request.PageSize)
-        .Take(request.PageSize);
-
-    var items = await query.ToListAsync(cancellationToken);
-
-    return new PagedResult<TEntity>
-    {
-        Items = items,
-        TotalRecords = totalRecords,
-        PageNumber = request.PageNumber,
-        PageSize = request.PageSize
-       
-    };
-}
 }

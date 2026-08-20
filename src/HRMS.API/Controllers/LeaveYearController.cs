@@ -2,8 +2,10 @@ using HRMS.Modules.Leave.Application.Features.LeaveYears.Commands.CreateLeaveYea
 using HRMS.Modules.Leave.Application.Features.LeaveYears.Commands.UpdateLeaveYear;
 using HRMS.Modules.Leave.Application.Features.LeaveYears.Commands.DeleteLeaveYear;
 using HRMS.Modules.Leave.Application.Features.LeaveYears.Queries.GetLeaveYearById;
+using HRMS.Modules.Leave.Application.Features.LeaveYears.Queries.GetLeaveYears;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using HRMS.BuildingBlocks.Application.Pagination;
 
 namespace HRMS.API.Controllers;
 
@@ -69,6 +71,18 @@ public class LeaveYearController : ControllerBase
 
         return Ok(result);
     }
+    [HttpGet]
+    public async Task<IActionResult> GetAll(
+        [FromQuery] PagedRequest request,
+        CancellationToken cancellationToken)
+    {
+        var result = await _mediator.Send(
+            new GetLeaveYearsQuery(request),
+            cancellationToken);
+
+        return Ok(result);
+    }
 }
+
 
 

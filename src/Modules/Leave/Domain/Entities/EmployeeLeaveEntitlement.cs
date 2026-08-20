@@ -13,4 +13,6 @@ public class EmployeeLeaveEntitlement : AuditableEntity<Guid>
     public Guid LeavePolicyRuleId { get; set; }
 
     public decimal EntitledDays { get; set; }
+
+    public decimal UsedDays { get; set; }
 }

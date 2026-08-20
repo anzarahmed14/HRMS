@@ -35,13 +35,15 @@ public class LeaveTypeConfiguration
             x.CompanyId,
             x.Code
         })
-        .IsUnique();
+         .IsUnique()
+         .HasFilter("[IsDeleted] = 0");
 
-        builder.HasIndex(x => new
-        {
-            x.CompanyId,
-            x.Name
-        })
-        .IsUnique();
+                builder.HasIndex(x => new
+                {
+                    x.CompanyId,
+                    x.Name
+                })
+        .IsUnique()
+        .HasFilter("[IsDeleted] = 0");
     }
 }

@@ -22,7 +22,8 @@ public class LeavePolicyRuleConfiguration
             x.LeavePolicyId,
             x.LeaveTypeId
         })
-        .IsUnique();
+ .IsUnique()
+ .HasFilter("[IsDeleted] = 0");
 
         builder.HasOne<LeavePolicy>()
             .WithMany()

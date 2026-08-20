@@ -2,8 +2,10 @@ using HRMS.Modules.Leave.Application.Features.EmployeeLeaveEntitlements.Commands
 using HRMS.Modules.Leave.Application.Features.EmployeeLeaveEntitlements.Commands.UpdateEmployeeLeaveEntitlement;
 using HRMS.Modules.Leave.Application.Features.EmployeeLeaveEntitlements.Commands.DeleteEmployeeLeaveEntitlement;
 using HRMS.Modules.Leave.Application.Features.EmployeeLeaveEntitlements.Queries.GetEmployeeLeaveEntitlementById;
+using HRMS.Modules.Leave.Application.Features.EmployeeLeaveEntitlements.Queries.GetEmployeeLeaveEntitlements;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using HRMS.BuildingBlocks.Application.Pagination;
 
 namespace HRMS.API.Controllers;
 
@@ -69,6 +71,18 @@ public class EmployeeLeaveEntitlementController : ControllerBase
 
         return Ok(result);
     }
+    [HttpGet]
+    public async Task<IActionResult> GetAll(
+        [FromQuery] PagedRequest request,
+        CancellationToken cancellationToken)
+    {
+        var result = await _mediator.Send(
+            new GetEmployeeLeaveEntitlementsQuery(request),
+            cancellationToken);
+
+        return Ok(result);
+    }
 }
+
 
 

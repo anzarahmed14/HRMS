@@ -9,6 +9,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\..\HRMS.BuildingBlocks\HRMS.BuildingBlocks.csproj" />
     <ProjectReference Include="..\Domain\HRMS.Modules.Leave.Domain.csproj" />
+    <ProjectReference Include="..\..\Employee\Domain\HRMS.Modules.Employee.Domain.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -17,6 +18,12 @@
     <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="12.1.1" />
     <PackageReference Include="MediatR" Version="14.2.0" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.11" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Features\LeaveRequests\Commands\DeleteLeaveRequest\" />
+    <Folder Include="Features\LeaveRequests\Commands\SubmitLeaveRequest\" />
+    <Folder Include="Features\LeaveRequests\Commands\UpdateLeaveRequest\" />
   </ItemGroup>
 
 </Project>
