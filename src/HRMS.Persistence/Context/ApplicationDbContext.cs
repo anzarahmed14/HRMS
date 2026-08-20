@@ -61,6 +61,9 @@ public DbSet<LeavePolicyRule> LeavePolicyRules => Set<LeavePolicyRule>();
     public DbSet<LeaveRequest> LeaveRequests
     => Set<LeaveRequest>();
 
+    public DbSet<CompanyHoliday> CompanyHolidays
+ => Set<CompanyHoliday>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);

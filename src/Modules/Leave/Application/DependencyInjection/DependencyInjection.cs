@@ -1,5 +1,6 @@
 using FluentValidation;
 using HRMS.BuildingBlocks.Application.Behaviors;
+using HRMS.Modules.Leave.Application.Features.CompanyHolidays.BusinessRules;
 using HRMS.Modules.Leave.Application.Features.EmployeeLeaveEntitlements.BusinessRules;
 using HRMS.Modules.Leave.Application.Features.LeavePolicies.BusinessRules;
 using HRMS.Modules.Leave.Application.Features.LeavePolicyRules.BusinessRules;
@@ -41,6 +42,7 @@ public static class DependencyInjection
         services.AddScoped<LeavePolicyRuleBusinessRules>();
         services.AddScoped<EmployeeLeaveEntitlementBusinessRules>();
         services.AddScoped<LeaveRequestBusinessRules>();
+        services.AddScoped<CompanyHolidayBusinessRules>();
         return services;
     }
 }
