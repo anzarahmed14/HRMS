@@ -1,11 +1,12 @@
+using HRMS.BuildingBlocks.Application.Pagination;
 using HRMS.Modules.Leave.Application.Features.EmployeeLeaveEntitlements.Commands.CreateEmployeeLeaveEntitlement;
-using HRMS.Modules.Leave.Application.Features.EmployeeLeaveEntitlements.Commands.UpdateEmployeeLeaveEntitlement;
 using HRMS.Modules.Leave.Application.Features.EmployeeLeaveEntitlements.Commands.DeleteEmployeeLeaveEntitlement;
+using HRMS.Modules.Leave.Application.Features.EmployeeLeaveEntitlements.Commands.UpdateEmployeeLeaveEntitlement;
+using HRMS.Modules.Leave.Application.Features.EmployeeLeaveEntitlements.Queries.GetEmployeeLeaveBalance;
 using HRMS.Modules.Leave.Application.Features.EmployeeLeaveEntitlements.Queries.GetEmployeeLeaveEntitlementById;
 using HRMS.Modules.Leave.Application.Features.EmployeeLeaveEntitlements.Queries.GetEmployeeLeaveEntitlements;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
-using HRMS.BuildingBlocks.Application.Pagination;
 
 namespace HRMS.API.Controllers;
 
@@ -79,6 +80,34 @@ public class EmployeeLeaveEntitlementController : ControllerBase
         var result = await _mediator.Send(
             new GetEmployeeLeaveEntitlementsQuery(request),
             cancellationToken);
+
+        return Ok(result);
+    }
+    [HttpGet("{employeeId:guid}/{leaveYearId:guid}/balance")]
+    public async Task<IActionResult> GetBalance(
+    Guid employeeId,
+    Guid leaveYearId,
+    [FromQuery] Guid? leaveTypeId,
+    CancellationToken cancellationToken)
+    {
+        var result = await _mediator.Send(
+            new GetEmployeeLeaveBalanceQuery(
+                employeeId,
+                leaveYearId,
+                leaveTypeId),
+            cancellationToken);
+
+        if (leaveTypeId.HasValue)
+        {
+            var balance = result.SingleOrDefault();
+
+            if (balance is null)
+            {
+                return NotFound();
+            }
+
+            return Ok(balance);
+        }
 
         return Ok(result);
     }
