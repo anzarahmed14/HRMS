@@ -14,5 +14,7 @@ public class EmployeeLeaveEntitlement : AuditableEntity<Guid>
 
     public decimal EntitledDays { get; set; }
 
+    public decimal CarryForwardDays { get; set; }
+
     public decimal UsedDays { get; set; }
 }

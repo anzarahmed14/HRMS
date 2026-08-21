@@ -38,7 +38,10 @@ public sealed class GetEmployeeLeaveBalanceQueryHandler
                 LeaveTypeId = x.LeaveTypeId,
                 EntitledDays = x.EntitledDays,
                 UsedDays = x.UsedDays,
-                AvailableDays = x.EntitledDays - x.UsedDays
+                AvailableDays =
+                    x.EntitledDays
+                    + x.CarryForwardDays
+                    - x.UsedDays
             })
             .ToList();
     }

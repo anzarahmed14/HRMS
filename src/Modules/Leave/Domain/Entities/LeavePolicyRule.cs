@@ -9,4 +9,8 @@ public class LeavePolicyRule : AuditableEntity<Guid>
     public Guid LeaveTypeId { get; set; }
 
     public decimal AnnualEntitlement { get; set; }
+
+    public bool IsCarryForwardAllowed { get; set; }
+
+    public decimal MaximumCarryForwardDays { get; set; }
 }

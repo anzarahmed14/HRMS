@@ -17,6 +17,11 @@ public class EmployeeLeaveEntitlementConfiguration
             .IsRequired()
             .HasPrecision(18, 2);
 
+        builder.Property(x => x.CarryForwardDays)
+    .IsRequired()
+    .HasPrecision(18, 2)
+    .HasDefaultValue(0);
+
         builder.Property(x => x.UsedDays)
             .IsRequired()
             .HasPrecision(18, 2)

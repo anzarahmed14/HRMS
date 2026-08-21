@@ -10,6 +10,8 @@ public sealed class EmployeeLeaveBalanceDto
 
     public decimal EntitledDays { get; init; }
 
+    public decimal CarryForwardDays { get; init; }
+
     public decimal UsedDays { get; init; }
 
     public decimal AvailableDays { get; init; }

@@ -17,13 +17,22 @@ public class LeavePolicyRuleConfiguration
             .IsRequired()
             .HasPrecision(18, 2);
 
+        builder.Property(x => x.IsCarryForwardAllowed)
+            .IsRequired()
+            .HasDefaultValue(false);
+
+        builder.Property(x => x.MaximumCarryForwardDays)
+            .IsRequired()
+            .HasPrecision(18, 2)
+            .HasDefaultValue(0);
+
         builder.HasIndex(x => new
         {
             x.LeavePolicyId,
             x.LeaveTypeId
         })
- .IsUnique()
- .HasFilter("[IsDeleted] = 0");
+        .IsUnique()
+        .HasFilter("[IsDeleted] = 0");
 
         builder.HasOne<LeavePolicy>()
             .WithMany()

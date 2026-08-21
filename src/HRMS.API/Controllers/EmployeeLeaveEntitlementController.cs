@@ -1,6 +1,7 @@
 using HRMS.BuildingBlocks.Application.Pagination;
 using HRMS.Modules.Leave.Application.Features.EmployeeLeaveEntitlements.Commands.CreateEmployeeLeaveEntitlement;
 using HRMS.Modules.Leave.Application.Features.EmployeeLeaveEntitlements.Commands.DeleteEmployeeLeaveEntitlement;
+using HRMS.Modules.Leave.Application.Features.EmployeeLeaveEntitlements.Commands.GenerateLeaveCarryForward;
 using HRMS.Modules.Leave.Application.Features.EmployeeLeaveEntitlements.Commands.UpdateEmployeeLeaveEntitlement;
 using HRMS.Modules.Leave.Application.Features.EmployeeLeaveEntitlements.Queries.GetEmployeeLeaveBalance;
 using HRMS.Modules.Leave.Application.Features.EmployeeLeaveEntitlements.Queries.GetEmployeeLeaveEntitlementById;
@@ -110,6 +111,20 @@ public class EmployeeLeaveEntitlementController : ControllerBase
         }
 
         return Ok(result);
+    }
+    [HttpPost("carry-forward")]
+    public async Task<IActionResult> GenerateCarryForward(
+    [FromBody] GenerateLeaveCarryForwardCommand command,
+    CancellationToken cancellationToken)
+    {
+        await _mediator.Send(
+            command,
+            cancellationToken);
+
+        return Ok(new
+        {
+            message = "Leave carry forward generated successfully."
+        });
     }
 }
 
