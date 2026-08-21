@@ -1,4 +1,4 @@
-using HRMS.BuildingBlocks.Application.Abstractions.Persistence;
+﻿using HRMS.BuildingBlocks.Application.Abstractions.Persistence;
 using HRMS.Modules.Leave.Application.Features.LeaveRequests.BusinessRules;
 using HRMS.Modules.Leave.Domain.Entities;
 using MediatR;
@@ -73,11 +73,13 @@ public sealed class CreateLeaveRequestCommandHandler
 
         // 9. Calculate total days
         var totalDays =
-            _businessRules.CalculateTotalDays(
+            await _businessRules.CalculateTotalDaysAsync(
+                request.LeaveYearId,
                 request.FromDate,
                 request.ToDate,
                 startDayPart,
-                endDayPart);
+                endDayPart,
+                cancellationToken);
 
         // 10. New request starts as DRAFT
         var draftStatusId =
@@ -105,3 +107,4 @@ public sealed class CreateLeaveRequestCommandHandler
         return leaveRequest.Id;
     }
 }
+

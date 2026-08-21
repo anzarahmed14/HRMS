@@ -1,4 +1,4 @@
-using HRMS.BuildingBlocks.Application.Abstractions.Persistence;
+﻿using HRMS.BuildingBlocks.Application.Abstractions.Persistence;
 using HRMS.BuildingBlocks.Application.Exceptions;
 using HRMS.Modules.Leave.Application.Features.LeaveRequests.BusinessRules;
 using HRMS.Modules.Leave.Domain.Entities;
@@ -91,11 +91,13 @@ public sealed class SubmitLeaveRequestCommandHandler
 
         // 10. Recalculate total days
         var totalDays =
-            _businessRules.CalculateTotalDays(
-                leaveRequest.FromDate,
-                leaveRequest.ToDate,
-                startDayPart,
-                endDayPart);
+            await _businessRules.CalculateTotalDaysAsync(
+            leaveRequest.LeaveYearId,
+            leaveRequest.FromDate,
+            leaveRequest.ToDate,
+            startDayPart,
+            endDayPart,
+            cancellationToken);
 
         // 11. Check overlapping PENDING / APPROVED leave
         await _businessRules.EnsureNoOverlappingLeaveRequestAsync(
@@ -117,3 +119,4 @@ public sealed class SubmitLeaveRequestCommandHandler
             cancellationToken);
     }
 }
+

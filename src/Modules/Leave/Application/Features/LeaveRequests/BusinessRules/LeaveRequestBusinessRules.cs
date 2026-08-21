@@ -1,4 +1,4 @@
-using HRMS.BuildingBlocks.Application.Abstractions.Persistence;
+﻿using HRMS.BuildingBlocks.Application.Abstractions.Persistence;
 using HRMS.BuildingBlocks.Application.Exceptions;
 using HRMS.Modules.Employee.Domain.Entities;
 using EmployeeEntity = HRMS.Modules.Employee.Domain.Entities.Employee;
@@ -21,7 +21,8 @@ public class LeaveRequestBusinessRules
     private readonly IReadRepository<LeaveType, Guid> _leaveTypeRepository;
     private readonly IReadRepository<LeaveDayPart, Guid> _leaveDayPartRepository;
     private readonly IReadRepository<LeaveRequestStatus, Guid> _statusRepository;
-    private readonly IReadRepository<LeaveRequest, Guid> _leaveRequestRepository;
+    private readonly IReadRepository<LeaveRequest, Guid> _leaveRequestRepository;
+    private readonly IReadRepository<CompanyHoliday, Guid> _companyHolidayRepository;
     private readonly IReadRepository<LeaveYearStatus, Guid> _leaveYearStatusRepository;
 
     public LeaveRequestBusinessRules(
@@ -31,7 +32,8 @@ public class LeaveRequestBusinessRules
         IReadRepository<LeaveDayPart, Guid> leaveDayPartRepository,
         IReadRepository<LeaveRequestStatus, Guid> statusRepository,
         IReadRepository<LeaveYearStatus, Guid> leaveYearStatusRepository,
-        IReadRepository<LeaveRequest, Guid> leaveRequestRepository)
+        IReadRepository<LeaveRequest, Guid> leaveRequestRepository,
+        IReadRepository<CompanyHoliday, Guid> companyHolidayRepository)
     {
         _employeeRepository = employeeRepository;
         _leaveYearRepository = leaveYearRepository;
@@ -39,7 +41,8 @@ public class LeaveRequestBusinessRules
         _leaveDayPartRepository = leaveDayPartRepository;
         _statusRepository = statusRepository;
         _leaveYearStatusRepository = leaveYearStatusRepository;
-        _leaveRequestRepository = leaveRequestRepository;
+        _leaveRequestRepository = leaveRequestRepository;
+        _companyHolidayRepository = companyHolidayRepository;
     }
 
     public async Task<EmployeeEntity> EnsureEmployeeIsValidAsync(
@@ -203,6 +206,60 @@ public class LeaveRequestBusinessRules
         totalDays += endDayPart.DaysValue;
 
         return totalDays;
+    }
+    /// <summary>
+    /// Calculates leave days while excluding mandatory company holidays
+    /// belonging to the selected leave year.
+    /// </summary>
+    public async Task<decimal> CalculateTotalDaysAsync(
+        Guid leaveYearId,
+        DateOnly fromDate,
+        DateOnly toDate,
+        LeaveDayPart startDayPart,
+        LeaveDayPart endDayPart,
+        CancellationToken cancellationToken = default)
+    {
+        // Preserve the existing calculation as the baseline.
+        var totalDays = CalculateTotalDays(
+            fromDate,
+            toDate,
+            startDayPart,
+            endDayPart);
+
+        if (totalDays <= 0)
+        {
+            return totalDays;
+        }
+
+        // Only mandatory, active and non-deleted company holidays
+        // belonging to the selected LeaveYear are considered.
+        var holidays = await _companyHolidayRepository.FindAsync(
+            x =>
+                x.LeaveYearId == leaveYearId &&
+                x.HolidayDate >= fromDate &&
+                x.HolidayDate <= toDate &&
+                x.IsActive &&
+                !x.IsOptional &&
+                !x.IsDeleted,
+            cancellationToken);
+
+        if (!holidays.Any())
+        {
+            return totalDays;
+        }
+
+        foreach (var holiday in holidays)
+        {
+            // A holiday in the middle of the leave period
+            // represents one complete excluded leave day.
+            if (holiday.HolidayDate > fromDate &&
+                holiday.HolidayDate < toDate)
+            {
+                totalDays -= 1m;
+            }
+        }
+
+        return Math.Max(0m, totalDays);
     }
 
     public async Task EnsureNoOverlappingLeaveRequestAsync(
@@ -430,3 +487,4 @@ public class LeaveRequestBusinessRules
         return status;
     }
 }
+

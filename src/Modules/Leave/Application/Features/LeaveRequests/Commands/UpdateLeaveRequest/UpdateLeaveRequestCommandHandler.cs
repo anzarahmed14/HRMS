@@ -1,4 +1,4 @@
-using HRMS.BuildingBlocks.Application.Abstractions.Persistence;
+﻿using HRMS.BuildingBlocks.Application.Abstractions.Persistence;
 using HRMS.BuildingBlocks.Application.Exceptions;
 using HRMS.Modules.Leave.Application.Features.LeaveRequests.BusinessRules;
 using HRMS.Modules.Leave.Domain.Entities;
@@ -89,11 +89,13 @@ public sealed class UpdateLeaveRequestCommandHandler
 
         // 9. Recalculate total days
         var totalDays =
-            _businessRules.CalculateTotalDays(
+            await _businessRules.CalculateTotalDaysAsync(
+                leaveRequest.LeaveYearId,
                 request.FromDate,
                 request.ToDate,
                 startDayPart,
-                endDayPart);
+                endDayPart,
+                cancellationToken);
 
         // 10. Update editable fields
         leaveRequest.LeaveTypeId = request.LeaveTypeId;
@@ -110,3 +112,4 @@ public sealed class UpdateLeaveRequestCommandHandler
             cancellationToken);
     }
 }
+
