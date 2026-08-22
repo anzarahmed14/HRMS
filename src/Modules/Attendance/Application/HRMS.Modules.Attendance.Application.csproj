@@ -4,6 +4,7 @@
     <ProjectReference Include="..\..\..\HRMS.BuildingBlocks\HRMS.BuildingBlocks.csproj" />
     <ProjectReference Include="..\..\Companies\Domain\HRMS.Modules.Companies.Domain.csproj" />
     <ProjectReference Include="..\..\Employee\Domain\HRMS.Modules.Employee.Domain.csproj" />
+    <ProjectReference Include="..\..\Leave\Domain\HRMS.Modules.Leave.Domain.csproj" />
     <ProjectReference Include="..\Domain\HRMS.Modules.Attendance.Domain.csproj" />
   </ItemGroup>
 

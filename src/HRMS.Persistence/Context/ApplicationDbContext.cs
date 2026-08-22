@@ -71,6 +71,13 @@ public DbSet<LeavePolicyRule> LeavePolicyRules => Set<LeavePolicyRule>();
 
     public DbSet<EmployeeShiftAssignment>  EmployeeShiftAssignments => Set<EmployeeShiftAssignment>();
 
+    public DbSet<AttendanceSource> AttendanceSources   => Set<AttendanceSource>();
+
+    public DbSet<AttendanceDevice> AttendanceDevices  => Set<AttendanceDevice>();
+
+    public DbSet<AttendanceRawLog> AttendanceRawLogs   => Set<AttendanceRawLog>();
+
+    public DbSet<AttendanceRecord> AttendanceRecords => Set<AttendanceRecord>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -90,7 +97,12 @@ public DbSet<LeavePolicyRule> LeavePolicyRules => Set<LeavePolicyRule>();
 
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(AttendanceShiftConfiguration).Assembly);
 
-        modelBuilder.ApplyConfigurationsFromAssembly( typeof(EmployeeShiftAssignmentConfiguration).Assembly);
+        modelBuilder.ApplyConfigurationsFromAssembly(typeof(EmployeeShiftAssignmentConfiguration).Assembly);
+
+        modelBuilder.ApplyConfigurationsFromAssembly(typeof(AttendanceSourceConfiguration).Assembly);
+        modelBuilder.ApplyConfigurationsFromAssembly(typeof(AttendanceDeviceConfiguration).Assembly);
+        modelBuilder.ApplyConfigurationsFromAssembly(typeof(AttendanceRawLogConfiguration).Assembly);
+        modelBuilder.ApplyConfigurationsFromAssembly(typeof(AttendanceRecordConfiguration).Assembly);
     }
     public override async Task<int> SaveChangesAsync(
         CancellationToken cancellationToken = default)
