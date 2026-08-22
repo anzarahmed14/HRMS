@@ -79,30 +79,33 @@ public DbSet<LeavePolicyRule> LeavePolicyRules => Set<LeavePolicyRule>();
 
     public DbSet<AttendanceRecord> AttendanceRecords => Set<AttendanceRecord>();
 
+    public DbSet<AttendanceRegularization> AttendanceRegularizations => Set<AttendanceRegularization>();
+    public DbSet<AttendanceRegularizationStatus> AttendanceRegularizationStatuses => Set<AttendanceRegularizationStatus>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
 
-        modelBuilder.ApplyConfigurationsFromAssembly(typeof(ApplicationDbContext).Assembly);
+        // Persistence configurations
+        modelBuilder.ApplyConfigurationsFromAssembly(
+            typeof(ApplicationDbContext).Assembly);
 
-        modelBuilder.ApplyConfigurationsFromAssembly( typeof(RolePermissionConfiguration).Assembly);
+        // Identity configurations
+        modelBuilder.ApplyConfigurationsFromAssembly(
+            typeof(RolePermissionConfiguration).Assembly);
 
-        modelBuilder.ApplyConfigurationsFromAssembly(typeof(CompanyConfiguration).Assembly);
+        // Company configurations
+        modelBuilder.ApplyConfigurationsFromAssembly(
+            typeof(CompanyConfiguration).Assembly);
 
-            // Leave configurations
-        modelBuilder.ApplyConfigurationsFromAssembly(typeof(LeaveYearConfiguration).Assembly);
+        // Leave configurations
+        modelBuilder.ApplyConfigurationsFromAssembly(
+            typeof(LeaveYearConfiguration).Assembly);
 
         // Attendance configurations
-        modelBuilder.ApplyConfigurationsFromAssembly(typeof(AttendancePolicyConfiguration).Assembly);
-
-        modelBuilder.ApplyConfigurationsFromAssembly(typeof(AttendanceShiftConfiguration).Assembly);
-
-        modelBuilder.ApplyConfigurationsFromAssembly(typeof(EmployeeShiftAssignmentConfiguration).Assembly);
-
-        modelBuilder.ApplyConfigurationsFromAssembly(typeof(AttendanceSourceConfiguration).Assembly);
-        modelBuilder.ApplyConfigurationsFromAssembly(typeof(AttendanceDeviceConfiguration).Assembly);
-        modelBuilder.ApplyConfigurationsFromAssembly(typeof(AttendanceRawLogConfiguration).Assembly);
-        modelBuilder.ApplyConfigurationsFromAssembly(typeof(AttendanceRecordConfiguration).Assembly);
+        // All Attendance configurations are in the same assembly.
+        modelBuilder.ApplyConfigurationsFromAssembly(
+            typeof(AttendancePolicyConfiguration).Assembly);
     }
     public override async Task<int> SaveChangesAsync(
         CancellationToken cancellationToken = default)
