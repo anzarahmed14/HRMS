@@ -1,3 +1,8 @@
+dotnet ef migrations add TestAttendancePolicyModel `
+    --project ".\src\HRMS.Persistence\HRMS.Persistence.csproj" `
+    --startup-project ".\src\HRMS.API\HRMS.API.csproj" `
+    --output-dir "Migrations\AttendanceTest"
+
 Username: anzar
 Password: Password123
 

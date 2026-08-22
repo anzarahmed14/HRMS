@@ -19,6 +19,7 @@
   <ItemGroup>
     <ProjectReference Include="..\HRMS.BuildingBlocks\HRMS.BuildingBlocks.csproj" />
     <ProjectReference Include="..\HRMS.Persistence\HRMS.Persistence.csproj" />
+    <ProjectReference Include="..\Modules\Attendance\Application\HRMS.Modules.Attendance.Application.csproj" />
     <ProjectReference Include="..\Modules\Department\Application\HRMS.Modules.Department.Application.csproj" />
     <ProjectReference Include="..\Modules\Employee\Application\HRMS.Modules.Employee.Application.csproj" />
     <ProjectReference Include="..\Modules\Identity\Application\HRMS.Modules.Identity.Application.csproj" />

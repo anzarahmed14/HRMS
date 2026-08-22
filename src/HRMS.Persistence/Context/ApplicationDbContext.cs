@@ -12,6 +12,8 @@ using HRMS.Modules.Companies.Domain.Entities;
 using HRMS.Modules.Companies.Infrastructure.Configurations;
 using HRMS.Modules.Leave.Infrastructure.Configurations;
 using HRMS.Modules.Leave.Domain.Entities;
+using HRMS.Modules.Attendance.Domain.Entities;
+using HRMS.Modules.Attendance.Infrastructure.Configurations;
 namespace HRMS.Persistence.Context;
 
 public class ApplicationDbContext : DbContext
@@ -61,8 +63,14 @@ public DbSet<LeavePolicyRule> LeavePolicyRules => Set<LeavePolicyRule>();
     public DbSet<LeaveRequest> LeaveRequests
     => Set<LeaveRequest>();
 
-    public DbSet<CompanyHoliday> CompanyHolidays
- => Set<CompanyHoliday>();
+    public DbSet<AttendanceShift> AttendanceShifts => Set<AttendanceShift>();
+
+    public DbSet<CompanyHoliday> CompanyHolidays => Set<CompanyHoliday>();
+    public DbSet<AttendancePolicy> AttendancePolicies  => Set<AttendancePolicy>();
+
+
+    public DbSet<EmployeeShiftAssignment>  EmployeeShiftAssignments => Set<EmployeeShiftAssignment>();
+
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -75,8 +83,14 @@ public DbSet<LeavePolicyRule> LeavePolicyRules => Set<LeavePolicyRule>();
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(CompanyConfiguration).Assembly);
 
             // Leave configurations
-      modelBuilder.ApplyConfigurationsFromAssembly(
-        typeof(LeaveYearConfiguration).Assembly);
+        modelBuilder.ApplyConfigurationsFromAssembly(typeof(LeaveYearConfiguration).Assembly);
+
+        // Attendance configurations
+        modelBuilder.ApplyConfigurationsFromAssembly(typeof(AttendancePolicyConfiguration).Assembly);
+
+        modelBuilder.ApplyConfigurationsFromAssembly(typeof(AttendanceShiftConfiguration).Assembly);
+
+        modelBuilder.ApplyConfigurationsFromAssembly( typeof(EmployeeShiftAssignmentConfiguration).Assembly);
     }
     public override async Task<int> SaveChangesAsync(
         CancellationToken cancellationToken = default)
@@ -111,3 +125,5 @@ public DbSet<LeavePolicyRule> LeavePolicyRules => Set<LeavePolicyRule>();
         return await base.SaveChangesAsync(cancellationToken);
     }
 }
+
+

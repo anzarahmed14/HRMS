@@ -15,6 +15,8 @@ using HRMS.Persistence.DependencyInjection;
 using HRMS.Modules.Companies.Application.DependencyInjection;
 using HRMS.Modules.Leave.Application.DependencyInjection;
 using HRMS.Modules.Leave.Infrastructure.DependencyInjection;
+using HRMS.Modules.Attendance.Application.DependencyInjection;
+using HRMS.Modules.Attendance.Infrastructure.DependencyInjection;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -44,6 +46,8 @@ builder.Services.AddIdentityInfrastructure(builder.Configuration);
 
 builder.Services.AddLeaveApplication();
 builder.Services.AddLeaveInfrastructure();
+builder.Services.AddAttendanceApplication();
+builder.Services.AddAttendanceInfrastructure();
 
 // Identity Infrastructure registrations
 //builder.Services.AddIdentityInfrastructure();
@@ -94,3 +98,4 @@ record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
 {
     public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
 }
+

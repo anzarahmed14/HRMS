@@ -1,4 +1,3 @@
-﻿using HRMS.BuildingBlocks.Application.Abstractions.Persistence;
 using HRMS.BuildingBlocks.Application.Abstractions.Persistence;
 using HRMS.Modules.Leave.Application.Abstractions.Persistence;
 using HRMS.Persistence.Context;
@@ -41,4 +40,5 @@ public static class DependencyInjection
         return services;
     }
 }
+
 

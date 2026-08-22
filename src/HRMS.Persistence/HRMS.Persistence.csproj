@@ -1,6 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
+    <ProjectReference Include="..\Modules\Attendance\Domain\HRMS.Modules.Attendance.Domain.csproj" />
+    <ProjectReference Include="..\Modules\Attendance\Infrastructure\HRMS.Modules.Attendance.Infrastructure.csproj" />
     <ProjectReference Include="..\Modules\Employee\Domain\HRMS.Modules.Employee.Domain.csproj" />
     <ProjectReference Include="..\Modules\Department\Domain\HRMS.Modules.Department.Domain.csproj" />
     <ProjectReference Include="..\Modules\Identity\Domain\HRMS.Modules.Identity.Domain.csproj" />
