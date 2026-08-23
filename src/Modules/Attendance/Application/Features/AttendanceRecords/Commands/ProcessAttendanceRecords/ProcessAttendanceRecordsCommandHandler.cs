@@ -1,5 +1,5 @@
 using HRMS.BuildingBlocks.Application.Abstractions.Persistence;
-using HRMS.Modules.Attendance.Application.Features.AttendanceRecords.BusinessRules;
+using HRMS.Modules.Attendance.Application.Services;
 using HRMS.Modules.Attendance.Domain.Entities;
 using MediatR;
 
@@ -14,7 +14,9 @@ public sealed class ProcessAttendanceRecordsCommandHandler
     private readonly IReadRepository<AttendancePolicy, Guid> _policyRepository;
     private readonly IReadRepository<AttendanceRecord, Guid> _recordRepository;
     private readonly IWriteRepository<AttendanceRecord, Guid> _recordWriteRepository;
-    private readonly AttendanceCalendarBusinessRules _calendarRules;
+
+    private readonly IAttendanceCalculationService _calculationService;
+    private readonly IAttendanceDayStatusService _dayStatusService;
 
     public ProcessAttendanceRecordsCommandHandler(
         IReadRepository<AttendanceRawLog, Guid> rawLogRepository,
@@ -23,7 +25,8 @@ public sealed class ProcessAttendanceRecordsCommandHandler
         IReadRepository<AttendancePolicy, Guid> policyRepository,
         IReadRepository<AttendanceRecord, Guid> recordRepository,
         IWriteRepository<AttendanceRecord, Guid> recordWriteRepository,
-        AttendanceCalendarBusinessRules calendarRules)
+        IAttendanceCalculationService calculationService,
+        IAttendanceDayStatusService dayStatusService)
     {
         _rawLogRepository = rawLogRepository;
         _assignmentRepository = assignmentRepository;
@@ -31,7 +34,8 @@ public sealed class ProcessAttendanceRecordsCommandHandler
         _policyRepository = policyRepository;
         _recordRepository = recordRepository;
         _recordWriteRepository = recordWriteRepository;
-        _calendarRules = calendarRules;
+        _calculationService = calculationService;
+        _dayStatusService = dayStatusService;
     }
 
     public async Task<int> Handle(
@@ -101,94 +105,48 @@ public sealed class ProcessAttendanceRecordsCommandHandler
                 continue;
             }
 
-            var existing = await _recordRepository.FirstOrDefaultAsync(
-                x =>
-                    x.EmployeeId == request.EmployeeId &&
-                    x.AttendanceDate == date &&
-                    !x.IsDeleted,
-                cancellationToken);
+            var existing =
+                await _recordRepository.FirstOrDefaultAsync(
+                    x =>
+                        x.EmployeeId == request.EmployeeId &&
+                        x.AttendanceDate == date &&
+                        !x.IsDeleted,
+                    cancellationToken);
 
             if (existing is not null)
             {
                 continue;
             }
 
-            /*
-             * ---------------------------------------------------------
-             * 1. WEEKLY OFF
-             * ---------------------------------------------------------
-             */
+            // ---------------------------------------------------------
+            // 1. DETERMINE DAY STATUS
+            // ---------------------------------------------------------
 
-            if (_calendarRules.IsWeeklyOff(date))
+            var dayStatus =
+                await _dayStatusService.DetermineAsync(
+                    request.EmployeeId,
+                    date,
+                    cancellationToken);
+
+            if (dayStatus.Code !=
+                AttendanceDayStatusCodes.WorkingDay)
             {
                 await CreateCalendarRecordAsync(
                     request.EmployeeId,
                     assignment,
                     date,
-                    "WeeklyOff",
-                    "Weekly off.",
+                    dayStatus.Code,
+                    dayStatus.Remarks ?? string.Empty,
                     cancellationToken);
 
                 createdCount++;
+
                 continue;
             }
 
-            /*
-             * ---------------------------------------------------------
-             * 2. COMPANY HOLIDAY
-             * ---------------------------------------------------------
-             */
-
-            var isHoliday =
-                await _calendarRules.IsHolidayAsync(
-                    date,
-                    cancellationToken);
-
-            if (isHoliday)
-            {
-                await CreateCalendarRecordAsync(
-                    request.EmployeeId,
-                    assignment,
-                    date,
-                    "Holiday",
-                    "Company holiday.",
-                    cancellationToken);
-
-                createdCount++;
-                continue;
-            }
-
-            /*
-             * ---------------------------------------------------------
-             * 3. APPROVED LEAVE
-             * ---------------------------------------------------------
-             */
-
-            var isLeave =
-                await _calendarRules.IsApprovedLeaveAsync(
-                    request.EmployeeId,
-                    date,
-                    cancellationToken);
-
-            if (isLeave)
-            {
-                await CreateCalendarRecordAsync(
-                    request.EmployeeId,
-                    assignment,
-                    date,
-                    "Leave",
-                    "Approved leave.",
-                    cancellationToken);
-
-                createdCount++;
-                continue;
-            }
-
-            /*
-             * ---------------------------------------------------------
-             * 4. RAW ATTENDANCE LOGS
-             * ---------------------------------------------------------
-             */
+            // ---------------------------------------------------------
+            // 2. RAW ATTENDANCE LOGS
+            // ---------------------------------------------------------
 
             var dailyLogs = rawLogs
                 .Where(x =>
@@ -197,11 +155,9 @@ public sealed class ProcessAttendanceRecordsCommandHandler
                 .OrderBy(x => x.PunchDateTime)
                 .ToList();
 
-            /*
-             * ---------------------------------------------------------
-             * 5. NO LOG = ABSENT
-             * ---------------------------------------------------------
-             */
+            // ---------------------------------------------------------
+            // 3. NO LOG = ABSENT
+            // ---------------------------------------------------------
 
             if (dailyLogs.Count == 0)
             {
@@ -214,22 +170,32 @@ public sealed class ProcessAttendanceRecordsCommandHandler
                     cancellationToken);
 
                 createdCount++;
+
                 continue;
             }
 
-            /*
-             * ---------------------------------------------------------
-             * 6. CALCULATE ATTENDANCE
-             * ---------------------------------------------------------
-             */
+            // ---------------------------------------------------------
+            // 4. BUILD BASIC ATTENDANCE RECORD
+            // ---------------------------------------------------------
 
             var record = BuildAttendanceRecord(
                 request.EmployeeId,
                 assignment,
-                shift,
-                policy,
                 date,
                 dailyLogs);
+
+            // ---------------------------------------------------------
+            // 5. CALCULATE ATTENDANCE
+            // ---------------------------------------------------------
+
+            _calculationService.Calculate(
+                record,
+                shift,
+                policy);
+
+            // ---------------------------------------------------------
+            // 6. SAVE ATTENDANCE RECORD
+            // ---------------------------------------------------------
 
             await _recordWriteRepository.AddAsync(
                 record,
@@ -284,8 +250,6 @@ public sealed class ProcessAttendanceRecordsCommandHandler
     private static AttendanceRecord BuildAttendanceRecord(
         Guid employeeId,
         EmployeeShiftAssignment assignment,
-        AttendanceShift shift,
-        AttendancePolicy policy,
         DateOnly date,
         List<AttendanceRawLog> logs)
     {
@@ -304,201 +268,31 @@ public sealed class ProcessAttendanceRecordsCommandHandler
             AttendanceDate = date
         };
 
-        var inPunches = logs
-            .Where(x =>
-                string.Equals(
-                    x.PunchType,
-                    "IN",
-                    StringComparison.OrdinalIgnoreCase))
-            .OrderBy(x => x.PunchDateTime)
-            .ToList();
+        var firstIn =
+            logs
+                .Where(x =>
+                    string.Equals(
+                        x.PunchType,
+                        "IN",
+                        StringComparison.OrdinalIgnoreCase))
+                .OrderBy(x => x.PunchDateTime)
+                .FirstOrDefault();
 
-        var outPunches = logs
-            .Where(x =>
-                string.Equals(
-                    x.PunchType,
-                    "OUT",
-                    StringComparison.OrdinalIgnoreCase))
-            .OrderByDescending(x => x.PunchDateTime)
-            .ToList();
+        var lastOut =
+            logs
+                .Where(x =>
+                    string.Equals(
+                        x.PunchType,
+                        "OUT",
+                        StringComparison.OrdinalIgnoreCase))
+                .OrderByDescending(x => x.PunchDateTime)
+                .FirstOrDefault();
 
-        var firstIn = inPunches.FirstOrDefault();
+        record.CheckIn =
+            firstIn?.PunchDateTime;
 
-        var lastOut = outPunches.FirstOrDefault();
-
-        /*
-         * ---------------------------------------------------------
-         * MISSING IN
-         * ---------------------------------------------------------
-         */
-
-        if (firstIn is null)
-        {
-            record.CheckOut = lastOut?.PunchDateTime;
-
-            record.Status = "MissingIn";
-
-            record.Remarks =
-                "IN punch is missing.";
-
-            return record;
-        }
-
-        record.CheckIn = firstIn.PunchDateTime;
-
-        /*
-         * ---------------------------------------------------------
-         * MISSING OUT
-         * ---------------------------------------------------------
-         */
-
-        if (lastOut is null ||
-            lastOut.PunchDateTime <=
-            firstIn.PunchDateTime)
-        {
-            record.Status = "MissingOut";
-
-            record.Remarks =
-                "OUT punch is missing.";
-
-            return record;
-        }
-
-        record.CheckOut = lastOut.PunchDateTime;
-
-        /*
-         * ---------------------------------------------------------
-         * WORKED MINUTES
-         * ---------------------------------------------------------
-         */
-
-        var elapsedMinutes =
-            (int)(
-                lastOut.PunchDateTime -
-                firstIn.PunchDateTime)
-            .TotalMinutes;
-
-        record.WorkedMinutes =
-            Math.Max(
-                0,
-                elapsedMinutes -
-                shift.BreakMinutes);
-
-        /*
-         * ---------------------------------------------------------
-         * SHIFT TIME
-         * ---------------------------------------------------------
-         */
-
-        var scheduledStart =
-            date.ToDateTime(
-                shift.StartTime);
-
-        var scheduledEnd =
-            date.ToDateTime(
-                shift.EndTime);
-
-        /*
-         * ---------------------------------------------------------
-         * LATE
-         * ---------------------------------------------------------
-         */
-
-        var checkInLocal =
-            firstIn.PunchDateTime.LocalDateTime;
-
-        var lateThreshold =
-            scheduledStart.AddMinutes(
-                policy.GracePeriodMinutes);
-
-        if (checkInLocal > lateThreshold)
-        {
-            record.LateMinutes =
-                Math.Max(
-                    0,
-                    (int)(
-                        checkInLocal -
-                        scheduledStart)
-                    .TotalMinutes);
-        }
-
-        /*
-         * ---------------------------------------------------------
-         * EARLY LEAVE
-         * ---------------------------------------------------------
-         */
-
-        var checkOutLocal =
-            lastOut.PunchDateTime.LocalDateTime;
-
-        if (!shift.IsOvernight &&
-            checkOutLocal < scheduledEnd)
-        {
-            record.EarlyLeaveMinutes =
-                Math.Max(
-                    0,
-                    (int)(
-                        scheduledEnd -
-                        checkOutLocal)
-                    .TotalMinutes);
-        }
-
-        /*
-         * ---------------------------------------------------------
-         * OVERTIME
-         * ---------------------------------------------------------
-         */
-
-        if (policy.IsOvertimeAllowed &&
-            record.WorkedMinutes >
-            policy.FullDayMinutes)
-        {
-            var overtime =
-                record.WorkedMinutes -
-                policy.FullDayMinutes;
-
-            if (overtime >=
-                policy.MinimumOvertimeMinutes)
-            {
-                record.OvertimeMinutes =
-                    Math.Min(
-                        overtime,
-                        policy.MaximumOvertimeMinutes);
-            }
-        }
-
-        /*
-         * ---------------------------------------------------------
-         * STATUS
-         * ---------------------------------------------------------
-         */
-
-        if (record.WorkedMinutes <
-            policy.HalfDayMinutes)
-        {
-            record.Status = "HalfDay";
-        }
-        else if (record.LateMinutes > 0 &&
-                 record.OvertimeMinutes > 0)
-        {
-            record.Status = "LateOvertime";
-        }
-        else if (record.LateMinutes > 0)
-        {
-            record.Status = "Late";
-        }
-        else if (record.EarlyLeaveMinutes > 0)
-        {
-            record.Status = "EarlyLeave";
-        }
-        else if (record.OvertimeMinutes > 0)
-        {
-            record.Status = "Overtime";
-        }
-        else
-        {
-            record.Status = "Present";
-        }
+        record.CheckOut =
+            lastOut?.PunchDateTime;
 
         return record;
     }

@@ -82,6 +82,7 @@ public DbSet<LeavePolicyRule> LeavePolicyRules => Set<LeavePolicyRule>();
     public DbSet<AttendanceRegularization> AttendanceRegularizations => Set<AttendanceRegularization>();
     public DbSet<AttendanceRegularizationStatus> AttendanceRegularizationStatuses => Set<AttendanceRegularizationStatus>();
 
+    public DbSet<AttendanceDayStatus> AttendanceDayStatuses => Set<AttendanceDayStatus>();
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);

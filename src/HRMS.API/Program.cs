@@ -1,22 +1,23 @@
+using HRMS.API.Middleware;
 using HRMS.API.Services;
 using HRMS.BuildingBlocks.Application.Abstractions;
-using HRMS.API.Middleware;
+using HRMS.BuildingBlocks.Application.Behaviors;
+using HRMS.Modules.Attendance.Application.DependencyInjection;
+using HRMS.Modules.Attendance.Application.Services;
+using HRMS.Modules.Attendance.Infrastructure.DependencyInjection;
+using HRMS.Modules.Companies.Application.DependencyInjection;
+using HRMS.Modules.Department.Application.DependencyInjection;
+using HRMS.Modules.Employee.Application.DependencyInjection;
+using HRMS.Modules.Identity.Application.Abstractions.Security;
+using HRMS.Modules.Identity.Application.DependencyInjection;
+using HRMS.Modules.Identity.Infrastructure.DependencyInjection;
+using HRMS.Modules.Leave.Application.DependencyInjection;
+using HRMS.Modules.Leave.Infrastructure.DependencyInjection;
+using HRMS.Persistence.DependencyInjection;
 using MediatR;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
-using HRMS.BuildingBlocks.Application.Behaviors;
-using HRMS.Modules.Identity.Application.Abstractions.Security;
-using HRMS.Modules.Employee.Application.DependencyInjection;
-using HRMS.Modules.Department.Application.DependencyInjection;
-using HRMS.Modules.Identity.Application.DependencyInjection;
-using HRMS.Modules.Identity.Infrastructure.DependencyInjection;
-using HRMS.Persistence.DependencyInjection;
-using HRMS.Modules.Companies.Application.DependencyInjection;
-using HRMS.Modules.Leave.Application.DependencyInjection;
-using HRMS.Modules.Leave.Infrastructure.DependencyInjection;
-using HRMS.Modules.Attendance.Application.DependencyInjection;
-using HRMS.Modules.Attendance.Infrastructure.DependencyInjection;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -35,6 +36,10 @@ builder.Services.AddPersistence(builder.Configuration);
  //builder.Services.AddApplication();
 // builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddTransient( typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
+
+builder.Services.AddScoped<IAttendanceCalculationService,AttendanceCalculationService>();
+
+builder.Services.AddScoped<IAttendanceDayStatusService, AttendanceDayStatusService>();
 
 
 

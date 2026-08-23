@@ -1,6 +1,7 @@
 using HRMS.BuildingBlocks.Application.Abstractions;
 using HRMS.BuildingBlocks.Application.Abstractions.Persistence;
 using HRMS.BuildingBlocks.Application.Exceptions;
+using HRMS.Modules.Attendance.Application.Services;
 using HRMS.Modules.Attendance.Domain.Entities;
 using MediatR;
 
@@ -38,6 +39,9 @@ public sealed class ApproveAttendanceRegularizationCommandHandler
 
     private readonly IUserContext _userContext;
 
+    private readonly IAttendanceCalculationService
+        _calculationService;
+
     public ApproveAttendanceRegularizationCommandHandler(
         IReadRepository<AttendanceRegularization, Guid> regularizationRepository,
         IReadRepository<AttendanceRecord, Guid> recordRepository,
@@ -46,23 +50,45 @@ public sealed class ApproveAttendanceRegularizationCommandHandler
         IReadRepository<AttendancePolicy, Guid> policyRepository,
         IWriteRepository<AttendanceRegularization, Guid> regularizationWriteRepository,
         IWriteRepository<AttendanceRecord, Guid> recordWriteRepository,
-        IUserContext userContext)
+        IUserContext userContext,
+        IAttendanceCalculationService calculationService)
     {
-        _regularizationRepository = regularizationRepository;
-        _recordRepository = recordRepository;
-        _assignmentRepository = assignmentRepository;
-        _shiftRepository = shiftRepository;
-        _policyRepository = policyRepository;
+        _regularizationRepository =
+            regularizationRepository;
+
+        _recordRepository =
+            recordRepository;
+
+        _assignmentRepository =
+            assignmentRepository;
+
+        _shiftRepository =
+            shiftRepository;
+
+        _policyRepository =
+            policyRepository;
+
         _regularizationWriteRepository =
             regularizationWriteRepository;
-        _recordWriteRepository = recordWriteRepository;
-        _userContext = userContext;
+
+        _recordWriteRepository =
+            recordWriteRepository;
+
+        _userContext =
+            userContext;
+
+        _calculationService =
+            calculationService;
     }
 
     public async Task Handle(
         ApproveAttendanceRegularizationCommand request,
         CancellationToken cancellationToken)
     {
+        // ---------------------------------------------------------
+        // 1. GET REGULARIZATION
+        // ---------------------------------------------------------
+
         var regularization =
             await _regularizationRepository.GetByIdAsync(
                 request.Id,
@@ -76,6 +102,10 @@ public sealed class ApproveAttendanceRegularizationCommandHandler
                 request.Id);
         }
 
+        // ---------------------------------------------------------
+        // 2. ONLY PENDING CAN BE APPROVED
+        // ---------------------------------------------------------
+
         if (regularization.AttendanceRegularizationStatusId !=
             PendingStatusId)
         {
@@ -83,22 +113,32 @@ public sealed class ApproveAttendanceRegularizationCommandHandler
                 "Only pending attendance regularizations can be approved.");
         }
 
+        // ---------------------------------------------------------
+        // 3. GET ATTENDANCE RECORD
+        // ---------------------------------------------------------
+
         var record =
             await _recordRepository.GetByIdAsync(
                 regularization.AttendanceRecordId,
                 cancellationToken);
 
-        if (record is null || record.IsDeleted)
+        if (record is null ||
+            record.IsDeleted)
         {
             throw new NotFoundException(
                 "Attendance record",
                 regularization.AttendanceRecordId);
         }
 
+        // ---------------------------------------------------------
+        // 4. GET EMPLOYEE SHIFT ASSIGNMENT
+        // ---------------------------------------------------------
+
         var assignments =
             await _assignmentRepository.FindAsync(
                 x =>
-                    x.EmployeeId == regularization.EmployeeId &&
+                    x.EmployeeId ==
+                        regularization.EmployeeId &&
                     x.IsActive &&
                     !x.IsDeleted &&
                     x.EffectiveFrom <=
@@ -120,6 +160,10 @@ public sealed class ApproveAttendanceRegularizationCommandHandler
                 regularization.EmployeeId);
         }
 
+        // ---------------------------------------------------------
+        // 5. GET SHIFT
+        // ---------------------------------------------------------
+
         var shift =
             await _shiftRepository.GetByIdAsync(
                 assignment.AttendanceShiftId,
@@ -133,6 +177,10 @@ public sealed class ApproveAttendanceRegularizationCommandHandler
                 "Attendance shift",
                 assignment.AttendanceShiftId);
         }
+
+        // ---------------------------------------------------------
+        // 6. GET ATTENDANCE POLICY
+        // ---------------------------------------------------------
 
         var policy =
             await _policyRepository.GetByIdAsync(
@@ -148,20 +196,29 @@ public sealed class ApproveAttendanceRegularizationCommandHandler
                 assignment.AttendancePolicyId);
         }
 
-        // Apply requested attendance
+        // ---------------------------------------------------------
+        // 7. APPLY REQUESTED ATTENDANCE
+        // ---------------------------------------------------------
+
         record.CheckIn =
             regularization.RequestedCheckIn;
 
         record.CheckOut =
             regularization.RequestedCheckOut;
 
-        // Recalculate attendance
-        Recalculate(
+        // ---------------------------------------------------------
+        // 8. CALCULATE ATTENDANCE
+        // ---------------------------------------------------------
+
+        _calculationService.Calculate(
             record,
             shift,
             policy);
 
-        // Approve regularization
+        // ---------------------------------------------------------
+        // 9. APPROVE REGULARIZATION
+        // ---------------------------------------------------------
+
         regularization.AttendanceRegularizationStatusId =
             ApprovedStatusId;
 
@@ -174,136 +231,20 @@ public sealed class ApproveAttendanceRegularizationCommandHandler
         regularization.ApprovalRemarks =
             request.Remarks;
 
+        // ---------------------------------------------------------
+        // 10. SAVE ATTENDANCE RECORD
+        // ---------------------------------------------------------
+
         await _recordWriteRepository.UpdateAsync(
             record,
             cancellationToken);
 
+        // ---------------------------------------------------------
+        // 11. SAVE REGULARIZATION
+        // ---------------------------------------------------------
+
         await _regularizationWriteRepository.UpdateAsync(
             regularization,
             cancellationToken);
-    }
-
-    private static void Recalculate(
-        AttendanceRecord record,
-        AttendanceShift shift,
-        AttendancePolicy policy)
-    {
-        record.WorkedMinutes = 0;
-        record.LateMinutes = 0;
-        record.EarlyLeaveMinutes = 0;
-        record.OvertimeMinutes = 0;
-
-        if (!record.CheckIn.HasValue)
-        {
-            record.Status = "MissingIn";
-            return;
-        }
-
-        if (!record.CheckOut.HasValue)
-        {
-            record.Status = "MissingOut";
-            return;
-        }
-
-        if (record.CheckOut.Value <=
-            record.CheckIn.Value)
-        {
-            record.Status = "MissingOut";
-            return;
-        }
-
-        var elapsedMinutes =
-            (int)(
-                record.CheckOut.Value -
-                record.CheckIn.Value)
-            .TotalMinutes;
-
-        record.WorkedMinutes =
-            Math.Max(
-                0,
-                elapsedMinutes -
-                shift.BreakMinutes);
-
-        var scheduledStart =
-            record.AttendanceDate.ToDateTime(
-                shift.StartTime);
-
-        var scheduledEnd =
-            record.AttendanceDate.ToDateTime(
-                shift.EndTime);
-
-        var checkInLocal =
-            record.CheckIn.Value.LocalDateTime;
-
-        var checkOutLocal =
-            record.CheckOut.Value.LocalDateTime;
-
-        var lateThreshold =
-            scheduledStart.AddMinutes(
-                policy.GracePeriodMinutes);
-
-        if (checkInLocal > lateThreshold)
-        {
-            record.LateMinutes =
-                (int)(
-                    checkInLocal -
-                    scheduledStart)
-                .TotalMinutes;
-        }
-
-        if (!shift.IsOvernight &&
-            checkOutLocal < scheduledEnd)
-        {
-            record.EarlyLeaveMinutes =
-                (int)(
-                    scheduledEnd -
-                    checkOutLocal)
-                .TotalMinutes;
-        }
-
-        if (policy.IsOvertimeAllowed &&
-            record.WorkedMinutes >
-            policy.FullDayMinutes)
-        {
-            var overtime =
-                record.WorkedMinutes -
-                policy.FullDayMinutes;
-
-            if (overtime >=
-                policy.MinimumOvertimeMinutes)
-            {
-                record.OvertimeMinutes =
-                    Math.Min(
-                        overtime,
-                        policy.MaximumOvertimeMinutes);
-            }
-        }
-
-        if (record.WorkedMinutes <
-            policy.HalfDayMinutes)
-        {
-            record.Status = "HalfDay";
-        }
-        else if (record.LateMinutes > 0 &&
-                 record.OvertimeMinutes > 0)
-        {
-            record.Status = "LateOvertime";
-        }
-        else if (record.LateMinutes > 0)
-        {
-            record.Status = "Late";
-        }
-        else if (record.EarlyLeaveMinutes > 0)
-        {
-            record.Status = "EarlyLeave";
-        }
-        else if (record.OvertimeMinutes > 0)
-        {
-            record.Status = "Overtime";
-        }
-        else
-        {
-            record.Status = "Present";
-        }
     }
 }
