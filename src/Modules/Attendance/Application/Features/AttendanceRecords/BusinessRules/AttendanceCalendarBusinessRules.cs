@@ -43,7 +43,36 @@ public sealed class AttendanceCalendarBusinessRules
             cancellationToken);
     }
 
-    public async Task<bool> IsApprovedLeaveAsync(
+
+    public async Task<LeaveRequest?> IsApprovedLeaveAsync(
+    Guid employeeId,
+    DateOnly date,
+    CancellationToken cancellationToken = default)
+    {
+        var approvedStatus = await _leaveStatusRepository
+            .FirstOrDefaultAsync(
+                x =>
+                    x.Code == "APPROVED" &&
+                    x.IsActive &&
+                    !x.IsDeleted,
+                cancellationToken);
+
+        if (approvedStatus is null)
+        {
+            return null;
+        }
+
+        return await _leaveRequestRepository.FirstOrDefaultAsync(
+            x =>
+                x.EmployeeId == employeeId &&
+                x.StatusId == approvedStatus.Id &&
+                x.FromDate <= date &&
+                x.ToDate >= date &&
+                !x.IsDeleted,
+            cancellationToken);
+    }
+
+    public async Task<bool> IsApprovedLeaveAsync2(
         Guid employeeId,
         DateOnly date,
         CancellationToken cancellationToken = default)

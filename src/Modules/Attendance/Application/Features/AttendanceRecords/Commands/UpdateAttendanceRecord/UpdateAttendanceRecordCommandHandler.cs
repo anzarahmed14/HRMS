@@ -1,5 +1,6 @@
 using HRMS.BuildingBlocks.Application.Abstractions.Persistence;
 using HRMS.BuildingBlocks.Application.Exceptions;
+using HRMS.Modules.Attendance.Application.Services;
 using HRMS.Modules.Attendance.Domain.Entities;
 using MediatR;
 
@@ -20,16 +21,26 @@ public sealed class UpdateAttendanceRecordCommandHandler
     private readonly IReadRepository<AttendancePolicy, Guid>
         _policyRepository;
 
+    private readonly IWriteRepository<AttendanceRecord, Guid>
+        _writeRepository;
+
+    private readonly IAttendanceCalculationService
+        _calculationService;
+
     public UpdateAttendanceRecordCommandHandler(
         IReadRepository<AttendanceRecord, Guid> recordRepository,
         IReadRepository<EmployeeShiftAssignment, Guid> assignmentRepository,
         IReadRepository<AttendanceShift, Guid> shiftRepository,
-        IReadRepository<AttendancePolicy, Guid> policyRepository)
+        IReadRepository<AttendancePolicy, Guid> policyRepository,
+        IWriteRepository<AttendanceRecord, Guid> writeRepository,
+        IAttendanceCalculationService calculationService)
     {
         _recordRepository = recordRepository;
         _assignmentRepository = assignmentRepository;
         _shiftRepository = shiftRepository;
         _policyRepository = policyRepository;
+        _writeRepository = writeRepository;
+        _calculationService = calculationService;
     }
 
     public async Task Handle(
@@ -94,138 +105,29 @@ public sealed class UpdateAttendanceRecordCommandHandler
                 assignment.AttendancePolicyId);
         }
 
+        // ---------------------------------------------------------
+        // Update requested attendance values
+        // ---------------------------------------------------------
+
         record.CheckIn = request.CheckIn;
         record.CheckOut = request.CheckOut;
         record.Remarks = request.Remarks;
 
-        Recalculate(
+        // ---------------------------------------------------------
+        // Centralized attendance calculation
+        // ---------------------------------------------------------
+
+        _calculationService.Calculate(
             record,
             shift,
             policy);
 
-        await Task.CompletedTask;
-    }
+        // ---------------------------------------------------------
+        // Persist updated attendance record
+        // ---------------------------------------------------------
 
-    private static void Recalculate(
-        AttendanceRecord record,
-        AttendanceShift shift,
-        AttendancePolicy policy)
-    {
-        record.WorkedMinutes = 0;
-        record.LateMinutes = 0;
-        record.EarlyLeaveMinutes = 0;
-        record.OvertimeMinutes = 0;
-
-        if (!record.CheckIn.HasValue)
-        {
-            record.Status = "MissingIn";
-            return;
-        }
-
-        if (!record.CheckOut.HasValue)
-        {
-            record.Status = "MissingOut";
-            return;
-        }
-
-        if (record.CheckOut.Value <= record.CheckIn.Value)
-        {
-            record.Status = "MissingOut";
-            return;
-        }
-
-        var elapsedMinutes =
-            (int)(
-                record.CheckOut.Value -
-                record.CheckIn.Value)
-            .TotalMinutes;
-
-        record.WorkedMinutes =
-            Math.Max(
-                0,
-                elapsedMinutes -
-                shift.BreakMinutes);
-
-        var scheduledStart =
-            record.AttendanceDate.ToDateTime(
-                shift.StartTime);
-
-        var scheduledEnd =
-            record.AttendanceDate.ToDateTime(
-                shift.EndTime);
-
-        var checkInLocal =
-            record.CheckIn.Value.LocalDateTime;
-
-        var checkOutLocal =
-            record.CheckOut.Value.LocalDateTime;
-
-        var lateThreshold =
-            scheduledStart.AddMinutes(
-                policy.GracePeriodMinutes);
-
-        if (checkInLocal > lateThreshold)
-        {
-            record.LateMinutes =
-                (int)(
-                    checkInLocal -
-                    scheduledStart)
-                .TotalMinutes;
-        }
-
-        if (!shift.IsOvernight &&
-            checkOutLocal < scheduledEnd)
-        {
-            record.EarlyLeaveMinutes =
-                (int)(
-                    scheduledEnd -
-                    checkOutLocal)
-                .TotalMinutes;
-        }
-
-        if (policy.IsOvertimeAllowed &&
-            record.WorkedMinutes >
-            policy.FullDayMinutes)
-        {
-            var overtime =
-                record.WorkedMinutes -
-                policy.FullDayMinutes;
-
-            if (overtime >=
-                policy.MinimumOvertimeMinutes)
-            {
-                record.OvertimeMinutes =
-                    Math.Min(
-                        overtime,
-                        policy.MaximumOvertimeMinutes);
-            }
-        }
-
-        if (record.WorkedMinutes <
-            policy.HalfDayMinutes)
-        {
-            record.Status = "HalfDay";
-        }
-        else if (record.LateMinutes > 0 &&
-                 record.OvertimeMinutes > 0)
-        {
-            record.Status = "LateOvertime";
-        }
-        else if (record.LateMinutes > 0)
-        {
-            record.Status = "Late";
-        }
-        else if (record.EarlyLeaveMinutes > 0)
-        {
-            record.Status = "EarlyLeave";
-        }
-        else if (record.OvertimeMinutes > 0)
-        {
-            record.Status = "Overtime";
-        }
-        else
-        {
-            record.Status = "Present";
-        }
+        await _writeRepository.UpdateAsync(
+            record,
+            cancellationToken);
     }
 }

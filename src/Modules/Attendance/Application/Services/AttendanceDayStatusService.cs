@@ -58,18 +58,24 @@ public sealed class AttendanceDayStatusService
         // 3. APPROVED LEAVE
         // ---------------------------------------------------------
 
-        var isLeave =
+        var leave =
             await _calendarRules.IsApprovedLeaveAsync(
                 employeeId,
                 date,
                 cancellationToken);
 
-        if (isLeave)
+        if (leave is not null)
         {
+            var remarks =
+                leave.TotalDays == 0.50m
+                    ? "Approved half-day leave."
+                    : "Approved leave.";
+
             return await CreateResultAsync(
                 AttendanceDayStatusCodes.Leave,
-                "Approved leave.",
-                cancellationToken);
+                remarks,
+                cancellationToken,
+                leave.TotalDays);
         }
 
         // ---------------------------------------------------------
@@ -85,7 +91,8 @@ public sealed class AttendanceDayStatusService
     private async Task<AttendanceDayStatusResult> CreateResultAsync(
         string code,
         string? remarks,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        decimal? leaveDays = null)
     {
         var status =
             await _dayStatusRepository.FirstOrDefaultAsync(
@@ -104,6 +111,7 @@ public sealed class AttendanceDayStatusService
         return new AttendanceDayStatusResult(
             status.Id,
             status.Code,
-            remarks);
+            remarks,
+            leaveDays);
     }
 }

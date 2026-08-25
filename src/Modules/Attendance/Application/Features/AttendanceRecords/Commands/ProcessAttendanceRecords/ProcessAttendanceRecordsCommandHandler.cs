@@ -128,6 +128,31 @@ public sealed class ProcessAttendanceRecordsCommandHandler
                     date,
                     cancellationToken);
 
+            // ---------------------------------------------------------
+            // 1A. HALF-DAY APPROVED LEAVE
+            // ---------------------------------------------------------
+
+            if (dayStatus.Code ==
+                    AttendanceDayStatusCodes.Leave &&
+                dayStatus.LeaveDays == 0.50m)
+            {
+                await CreateCalendarRecordAsync(
+                    request.EmployeeId,
+                    assignment,
+                    date,
+                    "HalfDay",
+                    dayStatus.Remarks ?? "Approved half-day leave.",
+                    cancellationToken);
+
+                createdCount++;
+
+                continue;
+            }
+
+            // ---------------------------------------------------------
+            // 1B. OTHER NON-WORKING DAYS
+            // ---------------------------------------------------------
+
             if (dayStatus.Code !=
                 AttendanceDayStatusCodes.WorkingDay)
             {
