@@ -1,88 +1,122 @@
-using HRMS.BuildingBlocks.Domain.Entities;
 using HRMS.BuildingBlocks.Application.Abstractions;
-
-using HRMS.Modules.Employee.Domain.Entities;
-using HRMS.Modules.Department.Domain.Entities;
-
-
-using Microsoft.EntityFrameworkCore;
-using HRMS.Modules.Identity.Domain.Entities;
-using HRMS.Modules.Identity.Infrastructure.Configurations;
-using HRMS.Modules.Companies.Domain.Entities;
-using HRMS.Modules.Companies.Infrastructure.Configurations;
-using HRMS.Modules.Leave.Infrastructure.Configurations;
-using HRMS.Modules.Leave.Domain.Entities;
+using HRMS.BuildingBlocks.Domain.Entities;
 using HRMS.Modules.Attendance.Domain.Entities;
 using HRMS.Modules.Attendance.Infrastructure.Configurations;
+using HRMS.Modules.Companies.Infrastructure.Configurations;
+using HRMS.Modules.Department.Domain.Entities;
+using HRMS.Modules.Employee.Domain.Entities;
+using HRMS.Modules.Employee.Infrastructure.Configurations;
+using HRMS.Modules.Foundation.Domain.Entities;
+using HRMS.Modules.Foundation.Infrastructure.Configurations;
+using HRMS.Modules.Identity.Domain.Entities;
+using HRMS.Modules.Identity.Infrastructure.Configurations;
+using HRMS.Modules.Leave.Domain.Entities;
+using HRMS.Modules.Leave.Infrastructure.Configurations;
+using Microsoft.EntityFrameworkCore;
+
 namespace HRMS.Persistence.Context;
 
 public class ApplicationDbContext : DbContext
 {
     private readonly IUserContext _userContext;
+
     public ApplicationDbContext(
-    DbContextOptions<ApplicationDbContext> options,
-    IUserContext userContext)
-    : base(options)
-{
-    _userContext = userContext;
-}
+        DbContextOptions<ApplicationDbContext> options,
+        IUserContext userContext)
+        : base(options)
+    {
+        _userContext = userContext;
+    }
 
-  public DbSet<Employee> Employees => Set<Employee>();
+    public DbSet<Employee> Employees => Set<Employee>();
 
-public DbSet<Department> Departments => Set<Department>();
+    public DbSet<EmploymentType> EmploymentTypes => Set<EmploymentType>();
 
-public DbSet<User> Users => Set<User>();
+    public DbSet<AddressType> AddressTypes => Set<AddressType>();
 
-public DbSet<Role> Roles => Set<Role>();
+    public DbSet<Country> Countries => Set<Country>();
 
-public DbSet<UserRole> UserRoles => Set<UserRole>();
+    public DbSet<State> States => Set<State>();
+    public DbSet<EmployeeAddress> EmployeeAddresses => Set<EmployeeAddress>();
+    public DbSet<EmploymentStatus> EmploymentStatuses => Set<EmploymentStatus>();
 
-public DbSet<Permission> Permissions => Set<Permission>();
+    public DbSet<Department> Departments => Set<Department>();
 
-public DbSet<RolePermission> RolePermissions => Set<RolePermission>();
+    public DbSet<User> Users => Set<User>();
 
-public DbSet<LeaveYear> LeaveYears => Set<LeaveYear>();
+    public DbSet<Role> Roles => Set<Role>();
 
-public DbSet<LeaveYearStatus> LeaveYearStatuses => Set<LeaveYearStatus>();
+    public DbSet<UserRole> UserRoles => Set<UserRole>();
 
-public DbSet<LeaveType> LeaveTypes => Set<LeaveType>();
+    public DbSet<Permission> Permissions => Set<Permission>();
 
-public DbSet<LeavePolicy> LeavePolicies => Set<LeavePolicy>();
+    public DbSet<RolePermission> RolePermissions => Set<RolePermission>();
 
-public DbSet<LeavePolicyRule> LeavePolicyRules => Set<LeavePolicyRule>();
+    public DbSet<LeaveYear> LeaveYears => Set<LeaveYear>();
+
+    public DbSet<LeaveYearStatus> LeaveYearStatuses => Set<LeaveYearStatus>();
+
+    public DbSet<LeaveType> LeaveTypes => Set<LeaveType>();
+
+    public DbSet<LeavePolicy> LeavePolicies => Set<LeavePolicy>();
+
+    public DbSet<LeavePolicyRule> LeavePolicyRules => Set<LeavePolicyRule>();
 
     public DbSet<LeaveRequestStatus> LeaveRequestStatuses
         => Set<LeaveRequestStatus>();
 
     public DbSet<EmployeeLeaveEntitlement> EmployeeLeaveEntitlements
-    => Set<EmployeeLeaveEntitlement>();
+        => Set<EmployeeLeaveEntitlement>();
 
     public DbSet<LeaveDayPart> LeaveDayParts
-    => Set<LeaveDayPart>();
+        => Set<LeaveDayPart>();
 
     public DbSet<LeaveRequest> LeaveRequests
-    => Set<LeaveRequest>();
+        => Set<LeaveRequest>();
 
-    public DbSet<AttendanceShift> AttendanceShifts => Set<AttendanceShift>();
+    public DbSet<AttendanceShift> AttendanceShifts
+        => Set<AttendanceShift>();
 
-    public DbSet<CompanyHoliday> CompanyHolidays => Set<CompanyHoliday>();
-    public DbSet<AttendancePolicy> AttendancePolicies  => Set<AttendancePolicy>();
+    public DbSet<CompanyHoliday> CompanyHolidays
+        => Set<CompanyHoliday>();
 
+    public DbSet<AttendancePolicy> AttendancePolicies
+        => Set<AttendancePolicy>();
 
-    public DbSet<EmployeeShiftAssignment>  EmployeeShiftAssignments => Set<EmployeeShiftAssignment>();
+    public DbSet<EmployeeShiftAssignment> EmployeeShiftAssignments
+        => Set<EmployeeShiftAssignment>();
 
-    public DbSet<AttendanceSource> AttendanceSources   => Set<AttendanceSource>();
+    public DbSet<AttendanceSource> AttendanceSources
+        => Set<AttendanceSource>();
 
-    public DbSet<AttendanceDevice> AttendanceDevices  => Set<AttendanceDevice>();
+    public DbSet<AttendanceDevice> AttendanceDevices
+        => Set<AttendanceDevice>();
 
-    public DbSet<AttendanceRawLog> AttendanceRawLogs   => Set<AttendanceRawLog>();
+    public DbSet<AttendanceRawLog> AttendanceRawLogs
+        => Set<AttendanceRawLog>();
 
-    public DbSet<AttendanceRecord> AttendanceRecords => Set<AttendanceRecord>();
+    public DbSet<AttendanceRecord> AttendanceRecords
+        => Set<AttendanceRecord>();
 
-    public DbSet<AttendanceRegularization> AttendanceRegularizations => Set<AttendanceRegularization>();
-    public DbSet<AttendanceRegularizationStatus> AttendanceRegularizationStatuses => Set<AttendanceRegularizationStatus>();
+    public DbSet<AttendanceRegularization> AttendanceRegularizations
+        => Set<AttendanceRegularization>();
 
-    public DbSet<AttendanceDayStatus> AttendanceDayStatuses => Set<AttendanceDayStatus>();
+    public DbSet<AttendanceRegularizationStatus> AttendanceRegularizationStatuses
+        => Set<AttendanceRegularizationStatus>();
+
+    public DbSet<AttendanceDayStatus> AttendanceDayStatuses
+        => Set<AttendanceDayStatus>();
+
+    public DbSet<EmployeeContact> EmployeeContacts => Set<EmployeeContact>();
+    public DbSet<Relationship> Relationships => Set<Relationship>();
+
+    public DbSet<EmergencyContact> EmergencyContacts => Set<EmergencyContact>();
+    public DbSet<BankAccount> BankAccounts => Set<BankAccount>();
+    public DbSet<IdentifierType> IdentifierTypes => Set<IdentifierType>();
+
+    public DbSet<Gender> Genders => Set<Gender>();
+    public DbSet<MaritalStatus> MaritalStatuses => Set<MaritalStatus>();
+    public DbSet<EmployeeGovernmentIdentifier> EmployeeGovernmentIdentifiers => Set<EmployeeGovernmentIdentifier>();
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -90,6 +124,10 @@ public DbSet<LeavePolicyRule> LeavePolicyRules => Set<LeavePolicyRule>();
         // Persistence configurations
         modelBuilder.ApplyConfigurationsFromAssembly(
             typeof(ApplicationDbContext).Assembly);
+
+        // Employee configurations
+        modelBuilder.ApplyConfigurationsFromAssembly(
+            typeof(EmployeeConfiguration).Assembly);
 
         // Identity configurations
         modelBuilder.ApplyConfigurationsFromAssembly(
@@ -104,10 +142,16 @@ public DbSet<LeavePolicyRule> LeavePolicyRules => Set<LeavePolicyRule>();
             typeof(LeaveYearConfiguration).Assembly);
 
         // Attendance configurations
-        // All Attendance configurations are in the same assembly.
         modelBuilder.ApplyConfigurationsFromAssembly(
             typeof(AttendancePolicyConfiguration).Assembly);
+
+        // Foundation configurations
+        modelBuilder.ApplyConfigurationsFromAssembly(
+            typeof(AddressTypeConfiguration).Assembly);
+
+
     }
+
     public override async Task<int> SaveChangesAsync(
         CancellationToken cancellationToken = default)
     {
@@ -141,5 +185,3 @@ public DbSet<LeavePolicyRule> LeavePolicyRules => Set<LeavePolicyRule>();
         return await base.SaveChangesAsync(cancellationToken);
     }
 }
-
-

@@ -1,5 +1,12 @@
 using FluentValidation;
+using HRMS.Application.Features.BankAccounts.BusinessRules;
+using HRMS.Application.Features.EmergencyContacts.BusinessRules;
+using HRMS.Application.Features.EmployeeAddresses.BusinessRules;
+using HRMS.Application.Features.EmployeeContacts.BusinessRules;
 using HRMS.Application.Features.Employees.BusinessRules;
+using HRMS.Application.Features.EmploymentStatuses.BusinessRules;
+using HRMS.Application.Features.EmploymentTypes.BusinessRules;
+using HRMS.Application.Features.GovernmentIdentifiers.BusinessRules;
 using HRMS.BuildingBlocks.Application.Behaviors;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
@@ -31,6 +38,13 @@ public static class DependencyInjection
             typeof(ValidationBehavior<,>));
 
         services.AddScoped<EmployeeBusinessRules>();
+        services.AddScoped<EmploymentTypeBusinessRules>();
+        services.AddScoped<EmploymentStatusBusinessRules>();
+        services.AddScoped<EmployeeAddressBusinessRules>();
+        services.AddScoped<EmployeeContactBusinessRules>();
+        services.AddScoped<EmergencyContactBusinessRules>();
+        services.AddScoped<BankAccountBusinessRules>();
+        services.AddScoped<EmployeeGovernmentIdentifierBusinessRules>();
 
         return services;
     }

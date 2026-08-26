@@ -11,7 +11,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace HRMS.API.Controllers.Attendance;
 
 [ApiController]
-[Route("api/attendance-devices")]
+[Route("api/[controller]")]
 public class AttendanceDevicesController : ControllerBase
 {
     private readonly ISender _sender;
