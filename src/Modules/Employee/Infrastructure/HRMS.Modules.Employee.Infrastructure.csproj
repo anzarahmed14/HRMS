@@ -16,8 +16,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Domain\HRMS.Modules.Employee.Domain.csproj" />
+    <ProjectReference Include="..\..\Department\Domain\HRMS.Modules.Department.Domain.csproj" />
     <ProjectReference Include="..\..\Foundation\Domain\HRMS.Modules.Foundation.Domain.csproj" />
+    <ProjectReference Include="..\Domain\HRMS.Modules.Employee.Domain.csproj" />
   </ItemGroup>
 
 </Project>

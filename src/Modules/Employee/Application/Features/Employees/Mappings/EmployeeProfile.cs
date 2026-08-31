@@ -10,17 +10,10 @@ public class EmployeeProfile : Profile
 {
     public EmployeeProfile()
     {
-        // Entity -> DTO
-        // CreateMap<Employee, EmployeeDto>()
-        //     .ForMember(
-        //         dest => dest.DepartmentName,
-        //         opt => opt.MapFrom(src =>
-        //             src.Department != null ? src.Department.Name : null));
+        CreateMap<CreateEmployeeCommand, Employee>();
 
-        // Create DTO -> Entity
-       CreateMap<CreateEmployeeCommand, Employee>();
-
-        // Update DTO -> Entity
         CreateMap<UpdateEmployeeCommand, Employee>();
+
+        CreateMap<Employee, EmployeeDto>();
     }
 }

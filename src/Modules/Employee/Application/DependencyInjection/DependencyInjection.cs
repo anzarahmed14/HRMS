@@ -1,12 +1,20 @@
 using FluentValidation;
 using HRMS.Application.Features.BankAccounts.BusinessRules;
+using HRMS.Application.Features.Certifications.BusinessRules;
+using HRMS.Application.Features.Dependents.BusinessRules;
+using HRMS.Application.Features.Documents.BusinessRules;
+using HRMS.Application.Features.Educations.BusinessRules;
 using HRMS.Application.Features.EmergencyContacts.BusinessRules;
 using HRMS.Application.Features.EmployeeAddresses.BusinessRules;
 using HRMS.Application.Features.EmployeeContacts.BusinessRules;
 using HRMS.Application.Features.Employees.BusinessRules;
 using HRMS.Application.Features.EmploymentStatuses.BusinessRules;
 using HRMS.Application.Features.EmploymentTypes.BusinessRules;
+using HRMS.Application.Features.Experiences.BusinessRules;
 using HRMS.Application.Features.GovernmentIdentifiers.BusinessRules;
+using HRMS.Application.Features.Languages.BusinessRules;
+using HRMS.Application.Features.Nominees.BusinessRules;
+using HRMS.Application.Features.Skills.BusinessRules;
 using HRMS.BuildingBlocks.Application.Behaviors;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
@@ -45,6 +53,14 @@ public static class DependencyInjection
         services.AddScoped<EmergencyContactBusinessRules>();
         services.AddScoped<BankAccountBusinessRules>();
         services.AddScoped<EmployeeGovernmentIdentifierBusinessRules>();
+        services.AddScoped<EmployeeDependentBusinessRules>();
+        services.AddScoped<EmployeeNomineeBusinessRules>();
+        services.AddScoped<EmployeeDocumentBusinessRules>();
+        services.AddScoped<EmployeeEducationBusinessRules>();
+        services.AddScoped<EmployeeExperienceBusinessRules>();
+        services.AddScoped<EmployeeSkillBusinessRules>();
+        services.AddScoped<EmployeeCertificationBusinessRules>();
+        services.AddScoped<EmployeeLanguageBusinessRules>();
 
         return services;
     }

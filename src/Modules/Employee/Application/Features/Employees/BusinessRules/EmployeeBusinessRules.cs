@@ -2,7 +2,7 @@ using HRMS.BuildingBlocks.Application.Abstractions.Persistence;
 using HRMS.BuildingBlocks.Application.Exceptions;
 using HRMS.Modules.Department.Domain.Entities;
 using HRMS.Modules.Employee.Domain.Entities;
-
+using HRMS.Modules.Foundation.Domain.Entities;
 
 namespace HRMS.Application.Features.Employees.BusinessRules;
 
@@ -10,13 +10,19 @@ public class EmployeeBusinessRules
 {
     private readonly IReadRepository<Employee, Guid> _employeeRepository;
     private readonly IReadRepository<Department, Guid> _departmentRepository;
+    private readonly IReadRepository<Gender, Guid> _genderRepository;
+    private readonly IReadRepository<MaritalStatus, Guid> _maritalStatusRepository;
 
     public EmployeeBusinessRules(
         IReadRepository<Employee, Guid> employeeRepository,
-        IReadRepository<Department, Guid> departmentRepository)
+        IReadRepository<Department, Guid> departmentRepository,
+        IReadRepository<Gender, Guid> genderRepository,
+        IReadRepository<MaritalStatus, Guid> maritalStatusRepository)
     {
         _employeeRepository = employeeRepository;
         _departmentRepository = departmentRepository;
+        _genderRepository = genderRepository;
+        _maritalStatusRepository = maritalStatusRepository;
     }
 
     public async Task EnsureEmployeeExistsAsync(
@@ -112,6 +118,38 @@ public class EmployeeBusinessRules
             throw new NotFoundException(
                 "Department",
                 departmentId);
+        }
+    }
+
+    public async Task EnsureGenderExistsAsync(
+        Guid genderId,
+        CancellationToken cancellationToken = default)
+    {
+        var gender = await _genderRepository.GetByIdAsync(
+            genderId,
+            cancellationToken);
+
+        if (gender is null)
+        {
+            throw new NotFoundException(
+                "Gender",
+                genderId);
+        }
+    }
+
+    public async Task EnsureMaritalStatusExistsAsync(
+        Guid maritalStatusId,
+        CancellationToken cancellationToken = default)
+    {
+        var maritalStatus = await _maritalStatusRepository.GetByIdAsync(
+            maritalStatusId,
+            cancellationToken);
+
+        if (maritalStatus is null)
+        {
+            throw new NotFoundException(
+                "MaritalStatus",
+                maritalStatusId);
         }
     }
 }

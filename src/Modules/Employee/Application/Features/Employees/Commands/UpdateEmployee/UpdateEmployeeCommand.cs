@@ -21,4 +21,8 @@ public record UpdateEmployeeCommand : IRequest
     public DateOnly DateOfJoining { get; init; }
 
     public Guid DepartmentId { get; init; }
+
+    public Guid GenderId { get; init; }
+
+    public Guid MaritalStatusId { get; init; }
 }

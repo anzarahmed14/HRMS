@@ -19,4 +19,8 @@ public class UpdateEmployeeDto
     public DateOnly DateOfJoining { get; set; }
 
     public Guid DepartmentId { get; set; }
+
+    public Guid GenderId { get; set; }
+
+    public Guid MaritalStatusId { get; set; }
 }

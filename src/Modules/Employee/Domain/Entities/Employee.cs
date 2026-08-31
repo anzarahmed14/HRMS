@@ -1,6 +1,5 @@
 using HRMS.BuildingBlocks.Domain.Entities;
 
-
 namespace HRMS.Modules.Employee.Domain.Entities;
 
 public class Employee : AuditableEntity<Guid>
@@ -20,4 +19,9 @@ public class Employee : AuditableEntity<Guid>
     public DateOnly DateOfJoining { get; set; }
 
     public Guid DepartmentId { get; set; }
+
+    public Guid? GenderId { get; set; }
+
+    public Guid? MaritalStatusId { get; set; }
 }
+

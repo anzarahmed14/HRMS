@@ -117,6 +117,20 @@ public class ApplicationDbContext : DbContext
     public DbSet<Gender> Genders => Set<Gender>();
     public DbSet<MaritalStatus> MaritalStatuses => Set<MaritalStatus>();
     public DbSet<EmployeeGovernmentIdentifier> EmployeeGovernmentIdentifiers => Set<EmployeeGovernmentIdentifier>();
+
+    public DbSet<EmployeeDependent> EmployeeDependents => Set<EmployeeDependent>();
+    public DbSet<EmployeeNominee> EmployeeNominees => Set<EmployeeNominee>();
+    public DbSet<DocumentType> DocumentTypes => Set<DocumentType>();
+    public DbSet<EmployeeDocument> EmployeeDocuments => Set<EmployeeDocument>();
+    public DbSet<EmployeeEducation> EmployeeEducations => Set<EmployeeEducation>();
+
+    public DbSet<EmployeeExperience> EmployeeExperiences => Set<EmployeeExperience>();
+    public DbSet<Skill> Skills => Set<Skill>();
+    public DbSet<EmployeeSkill> EmployeeSkills => Set<EmployeeSkill>();
+    public DbSet<Certification> Certifications => Set<Certification>();
+    public DbSet<Language> Languages => Set<Language>();
+    public DbSet<EmployeeLanguage> EmployeeLanguages => Set<EmployeeLanguage>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);

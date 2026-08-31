@@ -1046,6 +1046,9 @@ namespace HRMS.Persistence.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
+                    b.Property<Guid>("GenderId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
@@ -1053,6 +1056,9 @@ namespace HRMS.Persistence.Migrations
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
+
+                    b.Property<Guid>("MaritalStatusId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid?>("ModifiedBy")
                         .HasColumnType("uniqueidentifier");
@@ -1066,11 +1072,17 @@ namespace HRMS.Persistence.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("DepartmentId");
+
                     b.HasIndex("Email")
                         .IsUnique();
 
                     b.HasIndex("EmployeeCode")
                         .IsUnique();
+
+                    b.HasIndex("GenderId");
+
+                    b.HasIndex("MaritalStatusId");
 
                     b.ToTable("Employees", (string)null);
                 });
@@ -1207,6 +1219,300 @@ namespace HRMS.Persistence.Migrations
                     b.ToTable("EmployeeContacts", (string)null);
                 });
 
+            modelBuilder.Entity("HRMS.Modules.Employee.Domain.Entities.EmployeeDependent", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<DateOnly>("DateOfBirth")
+                        .HasColumnType("date");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("DeletedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Email")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<Guid>("EmployeeId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("GenderId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDependent")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid?>("ModifiedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("ModifiedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.Property<string>("PhoneNumber")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<Guid>("RelationshipId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EmployeeId");
+
+                    b.HasIndex("GenderId");
+
+                    b.HasIndex("RelationshipId");
+
+                    b.ToTable("EmployeeDependents", (string)null);
+                });
+
+            modelBuilder.Entity("HRMS.Modules.Employee.Domain.Entities.EmployeeDocument", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ContentType")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("DeletedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("DocumentName")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.Property<Guid>("DocumentTypeId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("EmployeeId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("FileName")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<long>("FileSize")
+                        .HasColumnType("bigint");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsVerified")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid?>("ModifiedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("ModifiedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("StorageKey")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<DateTimeOffset>("UploadedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<DateTimeOffset?>("VerifiedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DocumentTypeId");
+
+                    b.HasIndex("EmployeeId");
+
+                    b.HasIndex("StorageKey")
+                        .IsUnique();
+
+                    b.ToTable("EmployeeDocuments", (string)null);
+                });
+
+            modelBuilder.Entity("HRMS.Modules.Employee.Domain.Entities.EmployeeEducation", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("DeletedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("EducationLevel")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<Guid>("EmployeeId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateOnly?>("EndDate")
+                        .HasColumnType("date");
+
+                    b.Property<string>("Grade")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("InstitutionName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsHighestQualification")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsVerified")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid?>("ModifiedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("ModifiedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Qualification")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("Specialization")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateOnly?>("StartDate")
+                        .HasColumnType("date");
+
+                    b.Property<string>("UniversityName")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTimeOffset?>("VerifiedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EmployeeId");
+
+                    b.ToTable("EmployeeEducations", (string)null);
+                });
+
+            modelBuilder.Entity("HRMS.Modules.Employee.Domain.Entities.EmployeeExperience", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("CompanyName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("DeletedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("EmployeeId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("EmploymentType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<DateOnly?>("EndDate")
+                        .HasColumnType("date");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("JobTitle")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.Property<string>("Location")
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.Property<Guid?>("ModifiedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("ModifiedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Responsibilities")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<DateOnly>("StartDate")
+                        .HasColumnType("date");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EmployeeId");
+
+                    b.ToTable("EmployeeExperiences", (string)null);
+                });
+
             modelBuilder.Entity("HRMS.Modules.Employee.Domain.Entities.EmployeeGovernmentIdentifier", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1268,6 +1574,196 @@ namespace HRMS.Persistence.Migrations
                         .HasFilter("[IsDeleted] = 0");
 
                     b.ToTable("EmployeeGovernmentIdentifiers", (string)null);
+                });
+
+            modelBuilder.Entity("HRMS.Modules.Employee.Domain.Entities.EmployeeLanguage", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("CanRead")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("CanSpeak")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("CanWrite")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("DeletedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("EmployeeId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid>("LanguageId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("ModifiedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("ModifiedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("ProficiencyLevel")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EmployeeId");
+
+                    b.HasIndex("LanguageId");
+
+                    b.HasIndex("EmployeeId", "LanguageId")
+                        .IsUnique()
+                        .HasFilter("[IsDeleted] = 0");
+
+                    b.ToTable("EmployeeLanguages", (string)null);
+                });
+
+            modelBuilder.Entity("HRMS.Modules.Employee.Domain.Entities.EmployeeNominee", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<DateOnly>("DateOfBirth")
+                        .HasColumnType("date");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("DeletedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Email")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<Guid>("EmployeeId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsMinor")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid?>("ModifiedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("ModifiedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.Property<string>("PhoneNumber")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<Guid>("RelationshipId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EmployeeId");
+
+                    b.HasIndex("RelationshipId");
+
+                    b.ToTable("EmployeeNominees", (string)null);
+                });
+
+            modelBuilder.Entity("HRMS.Modules.Employee.Domain.Entities.EmployeeSkill", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("DeletedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("EmployeeId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsPrimary")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid?>("ModifiedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("ModifiedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("ProficiencyLevel")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<Guid>("SkillId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("YearsOfExperience")
+                        .HasPrecision(5, 2)
+                        .HasColumnType("decimal(5,2)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EmployeeId")
+                        .IsUnique()
+                        .HasFilter("[IsPrimary] = 1 AND [IsDeleted] = 0");
+
+                    b.HasIndex("SkillId");
+
+                    b.HasIndex("EmployeeId", "SkillId")
+                        .IsUnique()
+                        .HasFilter("[IsDeleted] = 0");
+
+                    b.ToTable("EmployeeSkills", (string)null);
                 });
 
             modelBuilder.Entity("HRMS.Modules.Employee.Domain.Entities.EmploymentStatus", b =>
@@ -1466,6 +1962,146 @@ namespace HRMS.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("HRMS.Modules.Foundation.Domain.Entities.Certification", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("DeletedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("IssuingOrganization")
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.Property<Guid?>("ModifiedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("ModifiedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Code")
+                        .IsUnique();
+
+                    b.HasIndex("Name")
+                        .IsUnique();
+
+                    b.ToTable("Certifications", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("48000000-0000-0000-0000-000000000001"),
+                            Code = "AZURE_ADMINISTRATOR",
+                            CreatedOn = new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            IsActive = true,
+                            IsDeleted = false,
+                            IssuingOrganization = "Microsoft",
+                            Name = "Microsoft Certified: Azure Administrator Associate"
+                        },
+                        new
+                        {
+                            Id = new Guid("48000000-0000-0000-0000-000000000002"),
+                            Code = "AZURE_DEVELOPER",
+                            CreatedOn = new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            IsActive = true,
+                            IsDeleted = false,
+                            IssuingOrganization = "Microsoft",
+                            Name = "Microsoft Certified: Azure Developer Associate"
+                        },
+                        new
+                        {
+                            Id = new Guid("48000000-0000-0000-0000-000000000003"),
+                            Code = "AWS_DEVELOPER",
+                            CreatedOn = new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            IsActive = true,
+                            IsDeleted = false,
+                            IssuingOrganization = "Amazon Web Services",
+                            Name = "AWS Certified Developer"
+                        },
+                        new
+                        {
+                            Id = new Guid("48000000-0000-0000-0000-000000000004"),
+                            Code = "AWS_SOLUTIONS_ARCHITECT",
+                            CreatedOn = new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            IsActive = true,
+                            IsDeleted = false,
+                            IssuingOrganization = "Amazon Web Services",
+                            Name = "AWS Certified Solutions Architect"
+                        },
+                        new
+                        {
+                            Id = new Guid("48000000-0000-0000-0000-000000000005"),
+                            Code = "CSHARP",
+                            CreatedOn = new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            IsActive = true,
+                            IsDeleted = false,
+                            IssuingOrganization = "Microsoft",
+                            Name = "C# Certification"
+                        },
+                        new
+                        {
+                            Id = new Guid("48000000-0000-0000-0000-000000000006"),
+                            Code = "JAVA",
+                            CreatedOn = new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            IsActive = true,
+                            IsDeleted = false,
+                            IssuingOrganization = "Oracle",
+                            Name = "Java Certification"
+                        },
+                        new
+                        {
+                            Id = new Guid("48000000-0000-0000-0000-000000000007"),
+                            Code = "PMP",
+                            CreatedOn = new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            IsActive = true,
+                            IsDeleted = false,
+                            IssuingOrganization = "PMI",
+                            Name = "Project Management Professional"
+                        },
+                        new
+                        {
+                            Id = new Guid("48000000-0000-0000-0000-000000000008"),
+                            Code = "SCRUM_MASTER",
+                            CreatedOn = new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            IsActive = true,
+                            IsDeleted = false,
+                            IssuingOrganization = "Scrum Alliance",
+                            Name = "Certified ScrumMaster"
+                        });
+                });
+
             modelBuilder.Entity("HRMS.Modules.Foundation.Domain.Entities.Country", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1551,6 +2187,175 @@ namespace HRMS.Persistence.Migrations
                             IsActive = true,
                             IsDeleted = false,
                             Name = "United Arab Emirates"
+                        });
+                });
+
+            modelBuilder.Entity("HRMS.Modules.Foundation.Domain.Entities.DocumentType", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("nvarchar(40)");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("DeletedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsSensitive")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid?>("ModifiedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("ModifiedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Code")
+                        .IsUnique();
+
+                    b.HasIndex("Name")
+                        .IsUnique();
+
+                    b.ToTable("DocumentTypes", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("47000000-0000-0000-0000-000000000001"),
+                            Code = "PAN_CARD",
+                            CreatedOn = new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Description = "Permanent Account Number document.",
+                            IsActive = true,
+                            IsDeleted = false,
+                            IsSensitive = true,
+                            Name = "PAN Card"
+                        },
+                        new
+                        {
+                            Id = new Guid("47000000-0000-0000-0000-000000000002"),
+                            Code = "AADHAAR_CARD",
+                            CreatedOn = new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Description = "Aadhaar identity document.",
+                            IsActive = true,
+                            IsDeleted = false,
+                            IsSensitive = true,
+                            Name = "Aadhaar Card"
+                        },
+                        new
+                        {
+                            Id = new Guid("47000000-0000-0000-0000-000000000003"),
+                            Code = "PASSPORT",
+                            CreatedOn = new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Description = "Passport document.",
+                            IsActive = true,
+                            IsDeleted = false,
+                            IsSensitive = true,
+                            Name = "Passport"
+                        },
+                        new
+                        {
+                            Id = new Guid("47000000-0000-0000-0000-000000000004"),
+                            Code = "DRIVING_LICENSE",
+                            CreatedOn = new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Description = "Driving license document.",
+                            IsActive = true,
+                            IsDeleted = false,
+                            IsSensitive = true,
+                            Name = "Driving License"
+                        },
+                        new
+                        {
+                            Id = new Guid("47000000-0000-0000-0000-000000000005"),
+                            Code = "ADDRESS_PROOF",
+                            CreatedOn = new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Description = "Proof of residential address.",
+                            IsActive = true,
+                            IsDeleted = false,
+                            IsSensitive = false,
+                            Name = "Address Proof"
+                        },
+                        new
+                        {
+                            Id = new Guid("47000000-0000-0000-0000-000000000006"),
+                            Code = "OFFER_LETTER",
+                            CreatedOn = new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Description = "Employee offer letter.",
+                            IsActive = true,
+                            IsDeleted = false,
+                            IsSensitive = false,
+                            Name = "Offer Letter"
+                        },
+                        new
+                        {
+                            Id = new Guid("47000000-0000-0000-0000-000000000007"),
+                            Code = "JOINING_LETTER",
+                            CreatedOn = new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Description = "Employee joining letter.",
+                            IsActive = true,
+                            IsDeleted = false,
+                            IsSensitive = false,
+                            Name = "Joining Letter"
+                        },
+                        new
+                        {
+                            Id = new Guid("47000000-0000-0000-0000-000000000008"),
+                            Code = "EXPERIENCE_LETTER",
+                            CreatedOn = new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Description = "Previous employment experience letter.",
+                            IsActive = true,
+                            IsDeleted = false,
+                            IsSensitive = false,
+                            Name = "Experience Letter"
+                        },
+                        new
+                        {
+                            Id = new Guid("47000000-0000-0000-0000-000000000009"),
+                            Code = "EDUCATION_CERTIFICATE",
+                            CreatedOn = new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Description = "Educational qualification certificate.",
+                            IsActive = true,
+                            IsDeleted = false,
+                            IsSensitive = false,
+                            Name = "Education Certificate"
+                        },
+                        new
+                        {
+                            Id = new Guid("47000000-0000-0000-0000-000000000010"),
+                            Code = "OTHER",
+                            CreatedOn = new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            Description = "Other employee document.",
+                            IsActive = true,
+                            IsDeleted = false,
+                            IsSensitive = false,
+                            Name = "Other"
                         });
                 });
 
@@ -1793,6 +2598,134 @@ namespace HRMS.Persistence.Migrations
                             IsDeleted = false,
                             IsSensitive = true,
                             Name = "Driving License Number"
+                        });
+                });
+
+            modelBuilder.Entity("HRMS.Modules.Foundation.Domain.Entities.Language", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("DeletedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid?>("ModifiedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("ModifiedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Code")
+                        .IsUnique();
+
+                    b.HasIndex("Name")
+                        .IsUnique();
+
+                    b.ToTable("Languages", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("49000000-0000-0000-0000-000000000001"),
+                            Code = "EN",
+                            CreatedOn = new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "English"
+                        },
+                        new
+                        {
+                            Id = new Guid("49000000-0000-0000-0000-000000000002"),
+                            Code = "HI",
+                            CreatedOn = new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Hindi"
+                        },
+                        new
+                        {
+                            Id = new Guid("49000000-0000-0000-0000-000000000003"),
+                            Code = "MR",
+                            CreatedOn = new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Marathi"
+                        },
+                        new
+                        {
+                            Id = new Guid("49000000-0000-0000-0000-000000000004"),
+                            Code = "UR",
+                            CreatedOn = new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Urdu"
+                        },
+                        new
+                        {
+                            Id = new Guid("49000000-0000-0000-0000-000000000005"),
+                            Code = "GU",
+                            CreatedOn = new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Gujarati"
+                        },
+                        new
+                        {
+                            Id = new Guid("49000000-0000-0000-0000-000000000006"),
+                            Code = "BN",
+                            CreatedOn = new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Bengali"
+                        },
+                        new
+                        {
+                            Id = new Guid("49000000-0000-0000-0000-000000000007"),
+                            Code = "TA",
+                            CreatedOn = new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Tamil"
+                        },
+                        new
+                        {
+                            Id = new Guid("49000000-0000-0000-0000-000000000008"),
+                            Code = "TE",
+                            CreatedOn = new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Telugu"
                         });
                 });
 
@@ -2046,6 +2979,61 @@ namespace HRMS.Persistence.Migrations
                             IsDeleted = false,
                             Name = "Other"
                         });
+                });
+
+            modelBuilder.Entity("HRMS.Modules.Foundation.Domain.Entities.Skill", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("DeletedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid?>("ModifiedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("ModifiedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Code")
+                        .IsUnique();
+
+                    b.HasIndex("Name")
+                        .IsUnique();
+
+                    b.ToTable("Skills", (string)null);
                 });
 
             modelBuilder.Entity("HRMS.Modules.Foundation.Domain.Entities.State", b =>
@@ -3079,6 +4067,27 @@ namespace HRMS.Persistence.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("HRMS.Modules.Employee.Domain.Entities.Employee", b =>
+                {
+                    b.HasOne("HRMS.Modules.Department.Domain.Entities.Department", null)
+                        .WithMany()
+                        .HasForeignKey("DepartmentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("HRMS.Modules.Foundation.Domain.Entities.Gender", null)
+                        .WithMany()
+                        .HasForeignKey("GenderId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("HRMS.Modules.Foundation.Domain.Entities.MaritalStatus", null)
+                        .WithMany()
+                        .HasForeignKey("MaritalStatusId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("HRMS.Modules.Employee.Domain.Entities.EmployeeAddress", b =>
                 {
                     b.HasOne("HRMS.Modules.Foundation.Domain.Entities.AddressType", null)
@@ -3115,6 +4124,60 @@ namespace HRMS.Persistence.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("HRMS.Modules.Employee.Domain.Entities.EmployeeDependent", b =>
+                {
+                    b.HasOne("HRMS.Modules.Employee.Domain.Entities.Employee", null)
+                        .WithMany()
+                        .HasForeignKey("EmployeeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("HRMS.Modules.Foundation.Domain.Entities.Gender", null)
+                        .WithMany()
+                        .HasForeignKey("GenderId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("HRMS.Modules.Foundation.Domain.Entities.Relationship", null)
+                        .WithMany()
+                        .HasForeignKey("RelationshipId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("HRMS.Modules.Employee.Domain.Entities.EmployeeDocument", b =>
+                {
+                    b.HasOne("HRMS.Modules.Foundation.Domain.Entities.DocumentType", null)
+                        .WithMany()
+                        .HasForeignKey("DocumentTypeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("HRMS.Modules.Employee.Domain.Entities.Employee", null)
+                        .WithMany()
+                        .HasForeignKey("EmployeeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("HRMS.Modules.Employee.Domain.Entities.EmployeeEducation", b =>
+                {
+                    b.HasOne("HRMS.Modules.Employee.Domain.Entities.Employee", null)
+                        .WithMany()
+                        .HasForeignKey("EmployeeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("HRMS.Modules.Employee.Domain.Entities.EmployeeExperience", b =>
+                {
+                    b.HasOne("HRMS.Modules.Employee.Domain.Entities.Employee", null)
+                        .WithMany()
+                        .HasForeignKey("EmployeeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("HRMS.Modules.Employee.Domain.Entities.EmployeeGovernmentIdentifier", b =>
                 {
                     b.HasOne("HRMS.Modules.Employee.Domain.Entities.Employee", null)
@@ -3126,6 +4189,51 @@ namespace HRMS.Persistence.Migrations
                     b.HasOne("HRMS.Modules.Foundation.Domain.Entities.IdentifierType", null)
                         .WithMany()
                         .HasForeignKey("IdentifierTypeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("HRMS.Modules.Employee.Domain.Entities.EmployeeLanguage", b =>
+                {
+                    b.HasOne("HRMS.Modules.Employee.Domain.Entities.Employee", null)
+                        .WithMany()
+                        .HasForeignKey("EmployeeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("HRMS.Modules.Foundation.Domain.Entities.Language", null)
+                        .WithMany()
+                        .HasForeignKey("LanguageId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("HRMS.Modules.Employee.Domain.Entities.EmployeeNominee", b =>
+                {
+                    b.HasOne("HRMS.Modules.Employee.Domain.Entities.Employee", null)
+                        .WithMany()
+                        .HasForeignKey("EmployeeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("HRMS.Modules.Foundation.Domain.Entities.Relationship", null)
+                        .WithMany()
+                        .HasForeignKey("RelationshipId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("HRMS.Modules.Employee.Domain.Entities.EmployeeSkill", b =>
+                {
+                    b.HasOne("HRMS.Modules.Employee.Domain.Entities.Employee", null)
+                        .WithMany()
+                        .HasForeignKey("EmployeeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("HRMS.Modules.Foundation.Domain.Entities.Skill", null)
+                        .WithMany()
+                        .HasForeignKey("SkillId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });

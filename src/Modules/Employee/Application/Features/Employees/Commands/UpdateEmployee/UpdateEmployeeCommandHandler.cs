@@ -40,19 +40,29 @@ public class UpdateEmployeeCommandHandler
             request.DepartmentId,
             cancellationToken);
 
-        // 3. Employee code must be unique
+        // 3. Gender must exist
+        await _employeeRules.EnsureGenderExistsAsync(
+            request.GenderId,
+            cancellationToken);
+
+        // 4. Marital status must exist
+        await _employeeRules.EnsureMaritalStatusExistsAsync(
+            request.MaritalStatusId,
+            cancellationToken);
+
+        // 5. Employee code must be unique
         await _employeeRules.EnsureEmployeeCodeUniqueAsync(
             request.EmployeeCode,
             request.Id,
             cancellationToken);
 
-        // 4. Email must be unique
+        // 6. Email must be unique
         await _employeeRules.EnsureEmailUniqueAsync(
             request.Email,
             request.Id,
             cancellationToken);
 
-        // 5. Get employee
+        // 7. Get employee
         var employee = await _employeeReadRepository.GetByIdAsync(
             request.Id,
             cancellationToken);
@@ -65,10 +75,10 @@ public class UpdateEmployeeCommandHandler
                 "Employee could not be loaded.");
         }
 
-        // 6. Map request → existing employee
+        // 8. Map request → existing employee
         _mapper.Map(request, employee);
 
-        // 7. Update database
+        // 9. Update database
         await _employeeWriteRepository.UpdateAsync(
             employee,
             cancellationToken);

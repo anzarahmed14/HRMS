@@ -19,4 +19,8 @@ public record CreateEmployeeCommand : IRequest<Guid>
     public DateOnly DateOfJoining { get; init; }
 
     public Guid DepartmentId { get; init; }
+
+    public Guid GenderId { get; init; }
+
+    public Guid MaritalStatusId { get; init; }
 }

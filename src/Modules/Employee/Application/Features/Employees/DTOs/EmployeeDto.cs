@@ -22,5 +22,9 @@ public class EmployeeDto
 
     public Guid DepartmentId { get; set; }
 
+    public Guid GenderId { get; set; }
+
+    public Guid MaritalStatusId { get; set; }
+
     public string? DepartmentName { get; set; }
 }
