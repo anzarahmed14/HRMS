@@ -4,16 +4,19 @@ using HRMS.Persistence.Context;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
 
-namespace HRMS.Persistence.Migrations
+namespace HRMS.Persistence.Migrations.EmployeeCertification
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260831095825_AddEmployeeCertification")]
+    partial class AddEmployeeCertification
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1177,8 +1180,7 @@ namespace HRMS.Persistence.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("CertificationNumber")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<Guid?>("CreatedBy")
                         .HasColumnType("uniqueidentifier");
@@ -1187,8 +1189,7 @@ namespace HRMS.Persistence.Migrations
                         .HasColumnType("datetimeoffset");
 
                     b.Property<string>("CredentialUrl")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<Guid?>("DeletedBy")
                         .HasColumnType("uniqueidentifier");
@@ -1225,15 +1226,7 @@ namespace HRMS.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CertificationId");
-
-                    b.HasIndex("EmployeeId");
-
-                    b.HasIndex("EmployeeId", "CertificationId")
-                        .IsUnique()
-                        .HasFilter("[IsDeleted] = 0");
-
-                    b.ToTable("EmployeeCertifications", (string)null);
+                    b.ToTable("EmployeeCertifications");
                 });
 
             modelBuilder.Entity("HRMS.Modules.Employee.Domain.Entities.EmployeeContact", b =>
@@ -4180,21 +4173,6 @@ namespace HRMS.Persistence.Migrations
                     b.HasOne("HRMS.Modules.Foundation.Domain.Entities.State", null)
                         .WithMany()
                         .HasForeignKey("StateId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("HRMS.Modules.Employee.Domain.Entities.EmployeeCertification", b =>
-                {
-                    b.HasOne("HRMS.Modules.Foundation.Domain.Entities.Certification", null)
-                        .WithMany()
-                        .HasForeignKey("CertificationId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("HRMS.Modules.Employee.Domain.Entities.Employee", null)
-                        .WithMany()
-                        .HasForeignKey("EmployeeId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });

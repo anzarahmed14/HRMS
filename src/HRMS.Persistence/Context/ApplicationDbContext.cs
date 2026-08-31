@@ -130,6 +130,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<Certification> Certifications => Set<Certification>();
     public DbSet<Language> Languages => Set<Language>();
     public DbSet<EmployeeLanguage> EmployeeLanguages => Set<EmployeeLanguage>();
+    public DbSet<EmployeeCertification> EmployeeCertifications => Set<EmployeeCertification>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -163,7 +164,8 @@ public class ApplicationDbContext : DbContext
         modelBuilder.ApplyConfigurationsFromAssembly(
             typeof(AddressTypeConfiguration).Assembly);
 
-
+        modelBuilder.ApplyConfigurationsFromAssembly(
+         typeof(EmployeeConfiguration).Assembly);
     }
 
     public override async Task<int> SaveChangesAsync(
