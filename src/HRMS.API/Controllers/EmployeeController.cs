@@ -21,7 +21,7 @@ public class EmployeeController : ControllerBase
     }
 
     [HttpGet]
-   // [Authorize(Policy = "Employee.View")]
+    [Authorize(Policy = "Employee.View")]
     public async Task<IActionResult> GetAll(
         CancellationToken cancellationToken)
     {
@@ -33,7 +33,7 @@ public class EmployeeController : ControllerBase
     }
 
     [HttpGet("{id:guid}")]
-   // [Authorize(Policy = "Employee.View")]
+    [Authorize(Policy = "Employee.View")]
     public async Task<IActionResult> GetById(
         Guid id,
         CancellationToken cancellationToken)
@@ -49,7 +49,7 @@ public class EmployeeController : ControllerBase
     }
 
     [HttpPost]
-   // [Authorize(Policy = "Employee.Create")]
+    [Authorize(Policy = "Employee.Create")]
     public async Task<IActionResult> Create(
         [FromBody] CreateEmployeeCommand command,
         CancellationToken cancellationToken)
@@ -65,7 +65,7 @@ public class EmployeeController : ControllerBase
     }
 
     [HttpPut("{id:guid}")]
-    //[Authorize(Policy = "Employee.Update")]
+    [Authorize(Policy = "Employee.Update")]
     public async Task<IActionResult> Update(
         Guid id,
         [FromBody] UpdateEmployeeCommand command,
@@ -82,7 +82,7 @@ public class EmployeeController : ControllerBase
     }
 
     [HttpDelete("{id:guid}")]
-   // [Authorize(Policy = "Employee.Delete")]
+    [Authorize(Policy = "Employee.Delete")]
     public async Task<IActionResult> Delete(
         Guid id,
         CancellationToken cancellationToken)

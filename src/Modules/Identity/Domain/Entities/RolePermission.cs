@@ -1,6 +1,8 @@
+using HRMS.BuildingBlocks.Domain.Entities;
+
 namespace HRMS.Modules.Identity.Domain.Entities;
 
-public class RolePermission
+public class RolePermission : AuditableEntity<Guid>
 {
     public Guid RoleId { get; set; }
 

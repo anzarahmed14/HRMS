@@ -4,30 +4,39 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace HRMS.Modules.Identity.Infrastructure.Configurations;
 
-
 public class UserRoleConfiguration : IEntityTypeConfiguration<UserRole>
 {
     public void Configure(EntityTypeBuilder<UserRole> builder)
     {
         builder.ToTable("UserRoles");
 
-        // Composite primary key
-        builder.HasKey(x => new
-        {
-            x.UserId,
-            x.RoleId
-        });
+        builder.HasKey(x => x.Id);
 
-        // User → UserRoles
+        builder.Property(x => x.Id)
+            .ValueGeneratedOnAdd();
+
         builder.HasOne(x => x.User)
             .WithMany(x => x.UserRoles)
             .HasForeignKey(x => x.UserId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        // Role → UserRoles
         builder.HasOne(x => x.Role)
             .WithMany(x => x.UserRoles)
             .HasForeignKey(x => x.RoleId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasIndex(x => x.UserId);
+
+        builder.HasIndex(x => x.RoleId);
+
+        builder.HasIndex(x => new
+        {
+            x.UserId,
+            x.RoleId
+        })
+        .IsUnique()
+        .HasFilter("[IsDeleted] = 0");
+
+        builder.HasQueryFilter(x => !x.IsDeleted);
     }
 }

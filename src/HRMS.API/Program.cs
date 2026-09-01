@@ -10,6 +10,7 @@ using HRMS.Modules.Department.Application.DependencyInjection;
 using HRMS.Modules.Employee.Application.DependencyInjection;
 using HRMS.Modules.Identity.Application.Abstractions.Security;
 using HRMS.Modules.Identity.Application.DependencyInjection;
+using HRMS.Modules.Identity.Infrastructure.Authorization;
 using HRMS.Modules.Identity.Infrastructure.DependencyInjection;
 using HRMS.Modules.Leave.Application.DependencyInjection;
 using HRMS.Modules.Leave.Infrastructure.DependencyInjection;
@@ -26,7 +27,7 @@ var builder = WebApplication.CreateBuilder(args);
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 
 builder.Services.AddHttpContextAccessor();
-
+builder.Services.AddIdentityAuthorization();
 builder.Services.AddScoped<CurrentUserContext>();
 builder.Services.AddScoped<IUserContext>(
     sp => sp.GetRequiredService<CurrentUserContext>());

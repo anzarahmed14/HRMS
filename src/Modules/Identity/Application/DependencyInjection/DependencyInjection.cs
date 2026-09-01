@@ -26,7 +26,7 @@ public static class DependencyInjection
             typeof(ValidationBehavior<,>));
 
         services.AddScoped<IdentityBusinessRules>();
-
+         services.AddScoped<PermissionBusinessRules>();
         return services;
     }
 }

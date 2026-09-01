@@ -8,3 +8,8 @@
   "userName": "anzar",
   "password": "Password123"
 }
+{
+  "userId": "9AC796B4-020D-471D-9F1E-47E4C18FDC24",
+  "currentPassword": "NewPassword@456",
+  "newPassword": "Password123"
+}

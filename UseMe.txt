@@ -3,12 +3,11 @@ dotnet ef migrations add TestAttendancePolicyModel `
     --startup-project ".\src\HRMS.API\HRMS.API.csproj" `
     --output-dir "Migrations\AttendanceTest"
 
-Username: anzar
-Password: Password123
-
-
 
 Old Chat (Leave and balance and carry forward)
 https://chatgpt.com/c/6a8400fb-00e0-83e9-a9de-a9a4526b0d19
 Old Chat (Attendance Complete)
 https://chatgpt.com/c/6a88955a-0ab8-83e8-8d19-28f998987de4
+
+Role and Permission
+https://chatgpt.com/c/6a8d6bc7-d0c4-83ee-a149-38bb27372355

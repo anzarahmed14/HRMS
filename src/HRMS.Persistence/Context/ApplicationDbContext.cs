@@ -136,10 +136,6 @@ public class ApplicationDbContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
 
-        // Persistence configurations
-        modelBuilder.ApplyConfigurationsFromAssembly(
-            typeof(ApplicationDbContext).Assembly);
-
         // Employee configurations
         modelBuilder.ApplyConfigurationsFromAssembly(
             typeof(EmployeeConfiguration).Assembly);
@@ -163,9 +159,6 @@ public class ApplicationDbContext : DbContext
         // Foundation configurations
         modelBuilder.ApplyConfigurationsFromAssembly(
             typeof(AddressTypeConfiguration).Assembly);
-
-        modelBuilder.ApplyConfigurationsFromAssembly(
-         typeof(EmployeeConfiguration).Assembly);
     }
 
     public override async Task<int> SaveChangesAsync(
