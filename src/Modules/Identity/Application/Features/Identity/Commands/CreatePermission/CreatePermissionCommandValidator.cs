@@ -7,6 +7,9 @@ public class CreatePermissionCommandValidator
 {
     public CreatePermissionCommandValidator()
     {
+        RuleFor(x => x.ModuleId)
+            .NotEmpty();
+
         RuleFor(x => x.Name)
             .NotEmpty()
             .MaximumLength(150);

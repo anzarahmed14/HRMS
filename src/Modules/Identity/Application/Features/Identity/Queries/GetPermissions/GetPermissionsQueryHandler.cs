@@ -26,6 +26,7 @@ public class GetPermissionsQueryHandler
         return permissions.Select(x => new PermissionDto
         {
             Id = x.Id,
+            ModuleId = x.ModuleId,
             Name = x.Name,
             Description = x.Description,
             IsActive = x.IsActive

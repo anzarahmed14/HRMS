@@ -49,6 +49,8 @@ public class EmployeeConfiguration : IEntityTypeConfiguration<HRMS.Modules.Emplo
         builder.Property(x => x.MaritalStatusId)
                .IsRequired();
 
+        builder.Property(x => x.ReportingManagerId);
+
         // Department ? Employee
         builder.HasOne<HRMS.Modules.Department.Domain.Entities.Department>()
                .WithMany()
@@ -67,6 +69,12 @@ public class EmployeeConfiguration : IEntityTypeConfiguration<HRMS.Modules.Emplo
                .HasForeignKey(x => x.MaritalStatusId)
                .OnDelete(DeleteBehavior.Restrict);
 
+        // ReportingManager (self-referencing) ? Employee
+        builder.HasOne<HRMS.Modules.Employee.Domain.Entities.Employee>()
+               .WithMany()
+               .HasForeignKey(x => x.ReportingManagerId)
+               .OnDelete(DeleteBehavior.Restrict);
+
         builder.HasIndex(x => x.EmployeeCode)
                .IsUnique();
 
@@ -78,6 +86,8 @@ public class EmployeeConfiguration : IEntityTypeConfiguration<HRMS.Modules.Emplo
         builder.HasIndex(x => x.GenderId);
 
         builder.HasIndex(x => x.MaritalStatusId);
+
+        builder.HasIndex(x => x.ReportingManagerId);
 
         builder.HasQueryFilter(x => !x.IsDeleted);
     }

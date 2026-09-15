@@ -39,5 +39,9 @@ public class UpdateEmployeeCommandValidator
 
         RuleFor(x => x.DepartmentId)
             .NotEmpty();
+
+        RuleFor(x => x.ReportingManagerId)
+            .NotEqual(Guid.Empty)
+            .When(x => x.ReportingManagerId.HasValue);
     }
 }

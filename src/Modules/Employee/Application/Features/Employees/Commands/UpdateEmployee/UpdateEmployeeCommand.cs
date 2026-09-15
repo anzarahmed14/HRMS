@@ -25,4 +25,6 @@ public record UpdateEmployeeCommand : IRequest
     public Guid GenderId { get; init; }
 
     public Guid MaritalStatusId { get; init; }
+
+    public Guid? ReportingManagerId { get; init; }
 }

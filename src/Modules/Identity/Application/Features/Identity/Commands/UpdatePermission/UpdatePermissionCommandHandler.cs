@@ -32,6 +32,11 @@ public class UpdatePermissionCommandHandler
             request.Id,
             cancellationToken);
 
+        await _rules.EnsureModuleExistsAsync(
+            request.ModuleId,
+            cancellationToken);
+
+        permission.ModuleId = request.ModuleId;
         permission.Name = request.Name;
         permission.Description = request.Description;
         permission.IsActive = request.IsActive;

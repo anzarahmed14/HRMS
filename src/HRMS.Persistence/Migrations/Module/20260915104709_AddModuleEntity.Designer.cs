@@ -4,16 +4,19 @@ using HRMS.Persistence.Context;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
 
-namespace HRMS.Persistence.Migrations
+namespace HRMS.Persistence.Migrations.Module
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260915104709_AddModuleEntity")]
+    partial class AddModuleEntity
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1070,9 +1073,6 @@ namespace HRMS.Persistence.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
 
-                    b.Property<Guid?>("ReportingManagerId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.HasKey("Id");
 
                     b.HasIndex("DepartmentId");
@@ -1086,8 +1086,6 @@ namespace HRMS.Persistence.Migrations
                     b.HasIndex("GenderId");
 
                     b.HasIndex("MaritalStatusId");
-
-                    b.HasIndex("ReportingManagerId");
 
                     b.ToTable("Employees", (string)null);
                 });
@@ -4343,11 +4341,6 @@ namespace HRMS.Persistence.Migrations
                         .HasForeignKey("MaritalStatusId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
-
-                    b.HasOne("HRMS.Modules.Employee.Domain.Entities.Employee", null)
-                        .WithMany()
-                        .HasForeignKey("ReportingManagerId")
-                        .OnDelete(DeleteBehavior.Restrict);
                 });
 
             modelBuilder.Entity("HRMS.Modules.Employee.Domain.Entities.EmployeeAddress", b =>

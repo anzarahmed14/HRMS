@@ -22,6 +22,9 @@ public class PermissionConfiguration : IEntityTypeConfiguration<Permission>
         builder.Property(x => x.IsActive)
             .IsRequired();
 
+        builder.Property(x => x.ModuleId)
+            .IsRequired();
+
         builder.HasOne(x => x.Module)
             .WithMany(x => x.Permissions)
             .HasForeignKey(x => x.ModuleId)

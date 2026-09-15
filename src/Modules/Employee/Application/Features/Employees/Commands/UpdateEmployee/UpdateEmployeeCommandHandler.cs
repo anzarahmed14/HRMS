@@ -62,7 +62,19 @@ public class UpdateEmployeeCommandHandler
             request.Id,
             cancellationToken);
 
-        // 7. Get employee
+        // 7. Reporting manager, when supplied, must be valid (not self,
+        // must exist/not be deleted, and must not create a circular
+        // reporting relationship). A null value removes the manager and
+        // requires no validation.
+        if (request.ReportingManagerId.HasValue)
+        {
+            await _employeeRules.EnsureReportingManagerIsValidAsync(
+                request.Id,
+                request.ReportingManagerId.Value,
+                cancellationToken);
+        }
+
+        // 8. Get employee
         var employee = await _employeeReadRepository.GetByIdAsync(
             request.Id,
             cancellationToken);
@@ -75,10 +87,10 @@ public class UpdateEmployeeCommandHandler
                 "Employee could not be loaded.");
         }
 
-        // 8. Map request → existing employee
+        // 9. Map request → existing employee
         _mapper.Map(request, employee);
 
-        // 9. Update database
+        // 10. Update database
         await _employeeWriteRepository.UpdateAsync(
             employee,
             cancellationToken);

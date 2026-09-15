@@ -23,4 +23,6 @@ public record CreateEmployeeCommand : IRequest<Guid>
     public Guid GenderId { get; init; }
 
     public Guid MaritalStatusId { get; init; }
+
+    public Guid? ReportingManagerId { get; init; }
 }

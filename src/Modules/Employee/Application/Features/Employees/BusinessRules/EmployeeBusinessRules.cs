@@ -160,4 +160,63 @@ public class EmployeeBusinessRules
                 maritalStatusId);
         }
     }
+
+    // Validates a Reporting Manager being assigned to an EXISTING employee
+    // (Update). Checks, in order: self-reference, existence (the query
+    // filter on Employee already excludes soft-deleted rows, so a deleted
+    // employee is reported as not found), and circular reporting.
+    public async Task EnsureReportingManagerIsValidAsync(
+        Guid employeeId,
+        Guid reportingManagerId,
+        CancellationToken cancellationToken = default)
+    {
+        if (employeeId == reportingManagerId)
+        {
+            throw new ConflictException(
+                "An employee cannot be their own reporting manager.");
+        }
+
+        await EnsureEmployeeExistsAsync(
+            reportingManagerId,
+            cancellationToken);
+
+        await EnsureNoCircularReportingAsync(
+            employeeId,
+            reportingManagerId,
+            cancellationToken);
+    }
+
+    // Walks the proposed manager's reporting chain upward. If it ever
+    // reaches back to the employee being updated, assigning
+    // reportingManagerId would create a cycle in the hierarchy.
+    private async Task EnsureNoCircularReportingAsync(
+        Guid employeeId,
+        Guid reportingManagerId,
+        CancellationToken cancellationToken = default)
+    {
+        var visited = new HashSet<Guid>();
+        Guid? currentId = reportingManagerId;
+
+        while (currentId.HasValue)
+        {
+            if (currentId.Value == employeeId)
+            {
+                throw new ConflictException(
+                    "Assigning this reporting manager would create a circular reporting relationship.");
+            }
+
+            if (!visited.Add(currentId.Value))
+            {
+                // Guards against a pre-existing cycle unrelated to this
+                // update; stop walking rather than looping forever.
+                break;
+            }
+
+            var manager = await _employeeRepository.GetByIdAsync(
+                currentId.Value,
+                cancellationToken);
+
+            currentId = manager?.ReportingManagerId;
+        }
+    }
 }

@@ -27,9 +27,14 @@ public class CreatePermissionCommandHandler
             request.Name,
             cancellationToken);
 
+        await _rules.EnsureModuleExistsAsync(
+            request.ModuleId,
+            cancellationToken);
+
         var permission = new Permission
         {
             Id = Guid.NewGuid(),
+            ModuleId = request.ModuleId,
             Name = request.Name,
             Description = request.Description,
             IsActive = true

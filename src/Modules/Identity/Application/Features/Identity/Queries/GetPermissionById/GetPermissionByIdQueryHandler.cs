@@ -32,6 +32,7 @@ public class GetPermissionByIdQueryHandler
         return new PermissionDto
         {
             Id = permission.Id,
+            ModuleId = permission.ModuleId,
             Name = permission.Name,
             Description = permission.Description,
             IsActive = permission.IsActive

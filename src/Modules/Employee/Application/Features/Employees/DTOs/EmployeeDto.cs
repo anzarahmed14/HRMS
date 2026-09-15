@@ -26,5 +26,7 @@ public class EmployeeDto
 
     public Guid MaritalStatusId { get; set; }
 
+    public Guid? ReportingManagerId { get; set; }
+
     public string? DepartmentName { get; set; }
 }

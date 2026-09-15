@@ -45,6 +45,16 @@ public class CreateEmployeeCommandHandler
             request.DepartmentId,
             cancellationToken);
 
+        // A brand-new employee cannot yet be its own manager or an
+        // ancestor of anyone, so only existence needs to be checked here;
+        // self-reference/circular checks apply to Update instead.
+        if (request.ReportingManagerId.HasValue)
+        {
+            await _employeeRules.EnsureEmployeeExistsAsync(
+                request.ReportingManagerId.Value,
+                cancellationToken);
+        }
+
         var employee = _mapper.Map<Employee>(request);
 
         await _employeeWriteRepository.AddAsync(

@@ -23,5 +23,7 @@ public class Employee : AuditableEntity<Guid>
     public Guid? GenderId { get; set; }
 
     public Guid? MaritalStatusId { get; set; }
+
+    public Guid? ReportingManagerId { get; set; }
 }
 
