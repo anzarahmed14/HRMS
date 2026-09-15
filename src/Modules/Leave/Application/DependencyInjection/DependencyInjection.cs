@@ -2,11 +2,14 @@ using FluentValidation;
 using HRMS.BuildingBlocks.Application.Behaviors;
 using HRMS.Modules.Leave.Application.Features.CompanyHolidays.BusinessRules;
 using HRMS.Modules.Leave.Application.Features.EmployeeLeaveEntitlements.BusinessRules;
+using HRMS.Modules.Leave.Application.Features.LeaveDayParts.BusinessRules;
 using HRMS.Modules.Leave.Application.Features.LeavePolicies.BusinessRules;
 using HRMS.Modules.Leave.Application.Features.LeavePolicyRules.BusinessRules;
 using HRMS.Modules.Leave.Application.Features.LeaveRequests.BusinessRules;
+using HRMS.Modules.Leave.Application.Features.LeaveRequestStatuses.BusinessRules;
 using HRMS.Modules.Leave.Application.Features.LeaveTypes.BusinessRules;
 using HRMS.Modules.Leave.Application.Features.LeaveYears.BusinessRules;
+using HRMS.Modules.Leave.Application.Features.LeaveYearStatuses.BusinessRules;
 using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using System.Reflection;
@@ -43,6 +46,9 @@ public static class DependencyInjection
         services.AddScoped<EmployeeLeaveEntitlementBusinessRules>();
         services.AddScoped<LeaveRequestBusinessRules>();
         services.AddScoped<CompanyHolidayBusinessRules>();
+        services.AddScoped<LeaveYearStatusBusinessRules>();
+        services.AddScoped<LeaveRequestStatusBusinessRules>();
+        services.AddScoped<LeaveDayPartBusinessRules>();
         return services;
     }
 }

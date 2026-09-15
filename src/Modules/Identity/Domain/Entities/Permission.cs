@@ -1,8 +1,13 @@
 using HRMS.BuildingBlocks.Domain.Entities;
 
 namespace HRMS.Modules.Identity.Domain.Entities;
+
 public class Permission : AuditableEntity<Guid>
 {
+    public Guid ModuleId { get; set; }
+
+    public Module Module { get; set; } = null!;
+
     public string Name { get; set; } = string.Empty;
 
     public string? Description { get; set; }

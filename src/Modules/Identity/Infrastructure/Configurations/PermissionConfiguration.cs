@@ -1,10 +1,8 @@
-
 using HRMS.Modules.Identity.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace HRMS.Modules.Identity.Infrastructure.Configurations;
-
 
 public class PermissionConfiguration : IEntityTypeConfiguration<Permission>
 {
@@ -24,8 +22,16 @@ public class PermissionConfiguration : IEntityTypeConfiguration<Permission>
         builder.Property(x => x.IsActive)
             .IsRequired();
 
-        // Permission name must be unique
+        builder.HasOne(x => x.Module)
+            .WithMany(x => x.Permissions)
+            .HasForeignKey(x => x.ModuleId)
+            .OnDelete(DeleteBehavior.Restrict);
+
         builder.HasIndex(x => x.Name)
             .IsUnique();
+
+        builder.HasIndex(x => x.ModuleId);
+
+        builder.HasQueryFilter(x => !x.IsDeleted);
     }
 }

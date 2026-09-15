@@ -83,8 +83,12 @@ public class EmployeeBusinessRules
 
         if (exists)
         {
-            throw new ConflictException(
-                "Employee email already exists.");
+            throw new FluentValidation.ValidationException(
+            [
+                new FluentValidation.Results.ValidationFailure(
+                    "Email",
+                    "Email already exists.")
+            ]);
         }
     }
 
@@ -100,8 +104,12 @@ public class EmployeeBusinessRules
 
         if (exists)
         {
-            throw new ConflictException(
-                "Employee email already exists.");
+            throw new FluentValidation.ValidationException(
+            [
+                new FluentValidation.Results.ValidationFailure(
+                    "Email",
+                    "Email already exists.")
+            ]);
         }
     }
 

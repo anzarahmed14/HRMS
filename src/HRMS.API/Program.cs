@@ -8,6 +8,7 @@ using HRMS.Modules.Attendance.Infrastructure.DependencyInjection;
 using HRMS.Modules.Companies.Application.DependencyInjection;
 using HRMS.Modules.Department.Application.DependencyInjection;
 using HRMS.Modules.Employee.Application.DependencyInjection;
+using HRMS.Modules.Foundation.Application.DependencyInjection;
 using HRMS.Modules.Identity.Application.Abstractions.Security;
 using HRMS.Modules.Identity.Application.DependencyInjection;
 using HRMS.Modules.Identity.Infrastructure.Authorization;
@@ -43,7 +44,7 @@ builder.Services.AddScoped<IAttendanceCalculationService,AttendanceCalculationSe
 builder.Services.AddScoped<IAttendanceDayStatusService, AttendanceDayStatusService>();
 
 
-
+builder.Services.AddFoundationApplication();
 builder.Services.AddEmployeeApplication();
 builder.Services.AddDepartmentApplication();
 builder.Services.AddIdentityApplication();
@@ -57,6 +58,20 @@ builder.Services.AddAttendanceInfrastructure();
 
 // Identity Infrastructure registrations
 //builder.Services.AddIdentityInfrastructure();
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("ReactApp", policy =>
+    {
+        policy
+            .WithOrigins(
+                "http://127.0.0.1:5174",
+                "http://localhost:5174")
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowCredentials();
+    });
+});
 
 builder.Services
     .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -95,6 +110,7 @@ if (app.Environment.IsDevelopment())
 app.MapGet("/", () => "Hello World!");
 
 app.UseMiddleware<ExceptionHandlingMiddleware>();
+app.UseCors("ReactApp");
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();

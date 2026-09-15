@@ -1,4 +1,6 @@
 using HRMS.BuildingBlocks.Application.Pagination;
+using HRMS.Modules.Leave.Application.Features.EmployeeLeaveEntitlements.Commands.BulkDeleteEmployeeLeaveEntitlements;
+using HRMS.Modules.Leave.Application.Features.EmployeeLeaveEntitlements.Commands.BulkUpsertEmployeeLeaveEntitlements;
 using HRMS.Modules.Leave.Application.Features.EmployeeLeaveEntitlements.Commands.CreateEmployeeLeaveEntitlement;
 using HRMS.Modules.Leave.Application.Features.EmployeeLeaveEntitlements.Commands.DeleteEmployeeLeaveEntitlement;
 using HRMS.Modules.Leave.Application.Features.EmployeeLeaveEntitlements.Commands.GenerateLeaveCarryForward;
@@ -23,6 +25,7 @@ public class EmployeeLeaveEntitlementController : ControllerBase
         _mediator = mediator;
     }
 
+    
     [HttpPost]
     public async Task<IActionResult> Create(
         [FromBody] CreateEmployeeLeaveEntitlementCommand command,
@@ -141,7 +144,31 @@ public class EmployeeLeaveEntitlementController : ControllerBase
             message = "Leave carry forward rolled back successfully."
         });
     }
+    [HttpPost("bulk")]
+    public async Task<IActionResult> BulkUpsert(
+    [FromBody] BulkUpsertEmployeeLeaveEntitlementsCommand command,
+    CancellationToken cancellationToken)
+    {
+        var result = await _mediator.Send(
+            command,
+            cancellationToken);
+
+        return Ok(result);
+    }
+    [HttpPost("bulk/delete")]
+    public async Task<IActionResult> BulkDelete(
+       [FromBody] BulkDeleteEmployeeLeaveEntitlementsCommand command,
+       CancellationToken cancellationToken)
+    {
+        var result = await _mediator.Send(
+            command,
+            cancellationToken);
+
+        return Ok(result);
+    }
 }
+
+
 
 
 

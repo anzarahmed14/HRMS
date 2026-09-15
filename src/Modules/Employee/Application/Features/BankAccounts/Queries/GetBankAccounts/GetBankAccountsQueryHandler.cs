@@ -38,6 +38,7 @@ public sealed class GetBankAccountsQueryHandler
                     EmployeeId = x.EmployeeId,
                     AccountHolderName = x.AccountHolderName,
                     AccountNumber = BankAccountMasking.MaskAccountNumber(x.AccountNumber),
+                    MaskedAccountNumber = BankAccountMasking.MaskAccountNumber(x.AccountNumber),
                     BankName = x.BankName,
                     IFSCCode = x.IFSCCode,
                     BranchName = x.BranchName,

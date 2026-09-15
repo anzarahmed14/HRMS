@@ -11,7 +11,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace HRMS.API.Controllers.Leave;
 
 [ApiController]
-[Route("api/company-holidays")]
+[Route("api/[controller]")]
 public class CompanyHolidaysController : ControllerBase
 {
     private readonly ISender _sender;

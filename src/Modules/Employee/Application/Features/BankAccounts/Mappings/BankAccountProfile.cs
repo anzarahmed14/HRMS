@@ -14,6 +14,10 @@ public class BankAccountProfile : Profile
 
         CreateMap<UpdateBankAccountCommand, BankAccount>();
 
-        CreateMap<BankAccount, BankAccountDto>();
+        CreateMap<BankAccount, BankAccountDto>()
+            .ForMember(
+                dest => dest.MaskedAccountNumber,
+                opt => opt.MapFrom(src =>
+                    BankAccountMasking.MaskAccountNumber(src.AccountNumber)));
     }
 }
