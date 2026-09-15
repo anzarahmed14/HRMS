@@ -1,0 +1,423 @@
+﻿============================================================
+FILE: D:\project\vsProject\hrms\src\Modules\Companies\Application\Class1.cs
+============================================================
+namespace HRMS.Modules.Companies.Application;
+
+public class Class1
+{
+
+}
+
+============================================================
+FILE: D:\project\vsProject\hrms\src\Modules\Companies\Application\DependencyInjection\DependencyInjection.cs
+============================================================
+using FluentValidation;
+using HRMS.BuildingBlocks.Application.Behaviors;
+using HRMS.Modules.Companies.Application.Features.Companies.BusinessRules;
+using MediatR;
+using Microsoft.Extensions.DependencyInjection;
+using System.Reflection;
+
+namespace HRMS.Modules.Companies.Application.DependencyInjection;
+
+public static class DependencyInjection
+{
+    public static IServiceCollection AddCompaniesApplication(
+        this IServiceCollection services)
+    {
+        var assembly = Assembly.GetExecutingAssembly();
+
+        services.AddMediatR(cfg =>
+        {
+            cfg.RegisterServicesFromAssembly(assembly);
+        });
+
+        services.AddAutoMapper(cfg =>
+        {
+            cfg.AddMaps(assembly);
+        });
+
+        services.AddValidatorsFromAssembly(assembly);
+
+        services.AddTransient(
+            typeof(IPipelineBehavior<,>),
+            typeof(ValidationBehavior<,>));
+
+        services.AddScoped<CompanyBusinessRules>();
+
+        return services;
+    }
+}
+
+============================================================
+FILE: D:\project\vsProject\hrms\src\Modules\Companies\Application\Features\Companies\BusinessRules\CompanyBusinessRules.cs
+============================================================
+using HRMS.BuildingBlocks.Application.Abstractions.Persistence;
+using HRMS.BuildingBlocks.Application.Exceptions;
+using HRMS.Modules.Companies.Domain.Entities;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace HRMS.Modules.Companies.Application.Features.Companies.BusinessRules;
+
+
+public class CompanyBusinessRules
+{
+    private readonly IReadRepository<Company, Guid> _companyReadRepository;
+
+    public CompanyBusinessRules(
+        IReadRepository<Company, Guid> companyReadRepository)
+    {
+        _companyReadRepository = companyReadRepository;
+    }
+
+    public async Task EnsureCompanyExistsAsync(
+        Guid companyId,
+        CancellationToken cancellationToken = default)
+    {
+        var company = await _companyReadRepository.GetByIdAsync(
+            companyId,
+            cancellationToken);
+
+        if (company is null)
+        {
+            throw new NotFoundException(
+                "Company",
+                companyId);
+        }
+    }
+
+    public async Task EnsureCompanyCodeUniqueAsync(
+        string companyCode,
+        CancellationToken cancellationToken = default)
+    {
+        var exists = await _companyReadRepository.AnyAsync(
+            x => x.CompanyCode == companyCode,
+            cancellationToken);
+
+        if (exists)
+        {
+            throw new ConflictException(
+                "Company code already exists.");
+        }
+    }
+
+    public async Task EnsureCompanyCodeUniqueAsync(
+        string companyCode,
+        Guid companyId,
+        CancellationToken cancellationToken = default)
+    {
+        var exists = await _companyReadRepository.AnyAsync(
+            x => x.CompanyCode == companyCode &&
+                 x.Id != companyId,
+            cancellationToken);
+
+        if (exists)
+        {
+            throw new ConflictException(
+                "Company code already exists.");
+        }
+    }
+}
+
+
+============================================================
+FILE: D:\project\vsProject\hrms\src\Modules\Companies\Application\Features\Companies\Commands\CreateCompany\CreateCompanyCommand.cs
+============================================================
+using MediatR;
+
+namespace HRMS.Modules.Companies.Application.Features.Companies.Commands.CreateCompany;
+
+public record CreateCompanyCommand : IRequest<Guid>
+{
+    public string CompanyCode { get; init; } = string.Empty;
+
+    public string Name { get; init; } = string.Empty;
+
+    public bool IsActive { get; init; }
+}
+
+============================================================
+FILE: D:\project\vsProject\hrms\src\Modules\Companies\Application\Features\Companies\Commands\CreateCompany\CreateCompanyCommandHandler.cs
+============================================================
+using AutoMapper;
+using HRMS.BuildingBlocks.Application.Abstractions.Persistence;
+using HRMS.Modules.Companies.Application.Features.Companies.BusinessRules;
+using HRMS.Modules.Companies.Domain.Entities;
+using MediatR;
+
+namespace HRMS.Modules.Companies.Application.Features.Companies.Commands.CreateCompany;
+
+public class CreateCompanyCommandHandler
+    : IRequestHandler<CreateCompanyCommand, Guid>
+{
+    private readonly IWriteRepository<Company, Guid> _companyWriteRepository;
+    private readonly CompanyBusinessRules _companyRules;
+    private readonly IMapper _mapper;
+
+    public CreateCompanyCommandHandler(
+        IWriteRepository<Company, Guid> companyWriteRepository,
+        CompanyBusinessRules companyRules,
+        IMapper mapper)
+    {
+        _companyWriteRepository = companyWriteRepository;
+        _companyRules = companyRules;
+        _mapper = mapper;
+    }
+
+    public async Task<Guid> Handle(
+        CreateCompanyCommand request,
+        CancellationToken cancellationToken)
+    {
+        await _companyRules.EnsureCompanyCodeUniqueAsync(
+            request.CompanyCode,
+            cancellationToken);
+
+        var company = _mapper.Map<Company>(request);
+
+        await _companyWriteRepository.AddAsync(
+            company,
+            cancellationToken);
+
+        return company.Id;
+    }
+}
+
+============================================================
+FILE: D:\project\vsProject\hrms\src\Modules\Companies\Application\Features\Companies\Commands\CreateCompany\CreateCompanyCommandValidator.cs
+============================================================
+using FluentValidation;
+
+namespace HRMS.Modules.Companies.Application.Features.Companies.Commands.CreateCompany;
+
+public class CreateCompanyCommandValidator
+    : AbstractValidator<CreateCompanyCommand>
+{
+    public CreateCompanyCommandValidator()
+    {
+        RuleFor(x => x.CompanyCode)
+            .NotEmpty()
+            .MaximumLength(50);
+
+        RuleFor(x => x.Name)
+            .NotEmpty()
+            .MaximumLength(200);
+    }
+}
+
+============================================================
+FILE: D:\project\vsProject\hrms\src\Modules\Companies\Application\Features\Companies\DTOs\CreateCompanyDto.cs
+============================================================
+namespace HRMS.Modules.Companies.Application.Features.Companies.DTOs;
+
+public class CreateCompanyDto
+{
+    public string CompanyCode { get; set; } = string.Empty;
+
+    public string Name { get; set; } = string.Empty;
+
+    public bool IsActive { get; set; }
+}
+
+============================================================
+FILE: D:\project\vsProject\hrms\src\Modules\Companies\Application\Features\Companies\Mappings\CompanyProfile.cs
+============================================================
+using AutoMapper;
+using HRMS.Modules.Companies.Application.Features.Companies.Commands.CreateCompany;
+using HRMS.Modules.Companies.Domain.Entities;
+
+namespace HRMS.Modules.Companies.Application.Features.Companies.Mappings;
+
+public class CompanyProfile : Profile
+{
+    public CompanyProfile()
+    {
+        CreateMap<CreateCompanyCommand, Company>();
+    }
+}
+
+============================================================
+FILE: D:\project\vsProject\hrms\src\Modules\Companies\Domain\Class1.cs
+============================================================
+namespace HRMS.Modules.Companies.Domain;
+
+public class Class1
+{
+
+}
+
+============================================================
+FILE: D:\project\vsProject\hrms\src\Modules\Companies\Domain\Entities\Company.cs
+============================================================
+using HRMS.BuildingBlocks.Domain.Entities;
+
+namespace HRMS.Modules.Companies.Domain.Entities;
+
+public class Company : AuditableEntity<Guid>
+{
+    public string CompanyCode { get; set; } = string.Empty;
+
+    public string Name { get; set; } = string.Empty;
+
+    public bool IsActive { get; set; }
+}
+
+============================================================
+FILE: D:\project\vsProject\hrms\src\Modules\Companies\Infrastructure\Class1.cs
+============================================================
+namespace HRMS.Modules.Companies.Infrastructure;
+
+public class Class1
+{
+
+}
+
+============================================================
+FILE: D:\project\vsProject\hrms\src\Modules\Companies\Infrastructure\Configurations\CompanyConfiguration.cs
+============================================================
+using HRMS.Modules.Companies.Domain.Entities;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+
+
+namespace HRMS.Modules.Companies.Infrastructure.Configurations;
+
+public class CompanyConfiguration : IEntityTypeConfiguration<Company>
+{
+    public void Configure(EntityTypeBuilder<Company> builder)
+    {
+        builder.ToTable("Companies");
+
+
+        builder.HasKey(x => x.Id);
+
+        builder.Property(x => x.CompanyCode)
+            .IsRequired()
+            .HasMaxLength(50);
+
+        builder.Property(x => x.Name)
+            .IsRequired()
+            .HasMaxLength(200);
+
+        builder.Property(x => x.IsActive)
+            .IsRequired();
+
+        builder.Property(x => x.CreatedOn)
+            .IsRequired();
+
+        builder.Property(x => x.IsDeleted)
+            .IsRequired();
+
+        builder.HasIndex(x => x.CompanyCode)
+            .IsUnique();
+
+        builder.HasIndex(x => new
+        {
+            x.CompanyCode,
+            x.IsDeleted
+        });
+    }
+}
+
+============================================================
+FILE: D:\project\vsProject\hrms\src\HRMS.API\Controllers\Leave\CompanyHolidaysController.cs
+============================================================
+using HRMS.BuildingBlocks.Application.Pagination;
+using HRMS.Modules.Leave.Application.Features.CompanyHolidays.Commands.CreateCompanyHoliday;
+using HRMS.Modules.Leave.Application.Features.CompanyHolidays.Commands.DeleteCompanyHoliday;
+using HRMS.Modules.Leave.Application.Features.CompanyHolidays.Commands.UpdateCompanyHoliday;
+using HRMS.Modules.Leave.Application.Features.CompanyHolidays.DTOs;
+using HRMS.Modules.Leave.Application.Features.CompanyHolidays.Queries.GetCompanyHolidayById;
+using HRMS.Modules.Leave.Application.Features.CompanyHolidays.Queries.GetCompanyHolidays;
+using MediatR;
+using Microsoft.AspNetCore.Mvc;
+
+namespace HRMS.API.Controllers.Leave;
+
+[ApiController]
+[Route("api/company-holidays")]
+public class CompanyHolidaysController : ControllerBase
+{
+    private readonly ISender _sender;
+
+    public CompanyHolidaysController(ISender sender)
+    {
+        _sender = sender;
+    }
+
+    [HttpPost]
+    [ProducesResponseType(typeof(Guid), StatusCodes.Status201Created)]
+    public async Task<IActionResult> Create(
+        [FromBody] CreateCompanyHolidayCommand command,
+        CancellationToken cancellationToken)
+    {
+        var id = await _sender.Send(command, cancellationToken);
+
+        return StatusCode(
+            StatusCodes.Status201Created,
+            id);
+    }
+
+    [HttpGet("{id:guid}")]
+    [ProducesResponseType(typeof(CompanyHolidayDto), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetById(
+        Guid id,
+        CancellationToken cancellationToken)
+    {
+        var result = await _sender.Send(
+            new GetCompanyHolidayByIdQuery(id),
+            cancellationToken);
+
+        return Ok(result);
+    }
+
+    [HttpGet]
+    [ProducesResponseType(
+        typeof(PagedResult<CompanyHolidayDto>),
+        StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetAll(
+        [FromQuery] PagedRequest request,
+        CancellationToken cancellationToken)
+    {
+        var result = await _sender.Send(
+            new GetCompanyHolidaysQuery(request),
+            cancellationToken);
+
+        return Ok(result);
+    }
+
+    [HttpPut("{id:guid}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    public async Task<IActionResult> Update(
+        Guid id,
+        [FromBody] UpdateCompanyHolidayCommand command,
+        CancellationToken cancellationToken)
+    {
+        if (id != command.Id)
+        {
+            return BadRequest(
+                "Route ID does not match request ID.");
+        }
+
+        await _sender.Send(command, cancellationToken);
+
+        return NoContent();
+    }
+
+    [HttpDelete("{id:guid}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    public async Task<IActionResult> Delete(
+        Guid id,
+        CancellationToken cancellationToken)
+    {
+        await _sender.Send(
+            new DeleteCompanyHolidayCommand(id),
+            cancellationToken);
+
+        return NoContent();
+    }
+}
+

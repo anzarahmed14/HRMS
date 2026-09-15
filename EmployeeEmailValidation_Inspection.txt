@@ -1,0 +1,1614 @@
+
+============================================================
+FILE: D:\Project\vsProject\HRMS\src\Modules\Employee\Application\Features\Certifications\Commands\CreateEmployeeCertification\CreateEmployeeCertificationCommand.cs
+============================================================
+using MediatR;
+
+namespace HRMS.Application.Features.Certifications.Commands.CreateEmployeeCertification;
+
+public record CreateEmployeeCertificationCommand : IRequest<Guid>
+{
+    public Guid EmployeeId { get; init; }
+
+    public Guid CertificationId { get; init; }
+
+    public string? CertificationNumber { get; init; }
+
+    public DateOnly IssueDate { get; init; }
+
+    public DateOnly? ExpiryDate { get; init; }
+
+    public string? CredentialUrl { get; init; }
+}
+
+
+============================================================
+FILE: D:\Project\vsProject\HRMS\src\Modules\Employee\Application\Features\Certifications\Commands\CreateEmployeeCertification\CreateEmployeeCertificationCommandHandler.cs
+============================================================
+using HRMS.Application.Features.Certifications.BusinessRules;
+using HRMS.BuildingBlocks.Application.Abstractions.Persistence;
+using HRMS.Modules.Employee.Domain.Entities;
+using MediatR;
+
+namespace HRMS.Application.Features.Certifications.Commands.CreateEmployeeCertification;
+
+public class CreateEmployeeCertificationCommandHandler
+    : IRequestHandler<CreateEmployeeCertificationCommand, Guid>
+{
+    private readonly IWriteRepository<EmployeeCertification, Guid> _writeRepository;
+    private readonly EmployeeCertificationBusinessRules _businessRules;
+
+    public CreateEmployeeCertificationCommandHandler(
+        IWriteRepository<EmployeeCertification, Guid> writeRepository,
+        EmployeeCertificationBusinessRules businessRules)
+    {
+        _writeRepository = writeRepository;
+        _businessRules = businessRules;
+    }
+
+    public async Task<Guid> Handle(
+        CreateEmployeeCertificationCommand request,
+        CancellationToken cancellationToken)
+    {
+        await _businessRules.EnsureEmployeeExistsAsync(
+            request.EmployeeId,
+            cancellationToken);
+
+        await _businessRules.EnsureCertificationExistsAsync(
+            request.CertificationId,
+            cancellationToken);
+
+        await _businessRules.EnsureCertificationAvailableAsync(
+            request.EmployeeId,
+            request.CertificationId,
+            cancellationToken);
+
+        var entity = new EmployeeCertification
+        {
+            Id = Guid.NewGuid(),
+            EmployeeId = request.EmployeeId,
+            CertificationId = request.CertificationId,
+            CertificationNumber = request.CertificationNumber,
+            IssueDate = request.IssueDate,
+            ExpiryDate = request.ExpiryDate,
+            CredentialUrl = request.CredentialUrl,
+            IsVerified = false,
+            VerifiedOn = null,
+            IsActive = true
+        };
+
+        await _writeRepository.AddAsync(
+            entity,
+            cancellationToken);
+
+        return entity.Id;
+    }
+}
+
+
+============================================================
+FILE: D:\Project\vsProject\HRMS\src\Modules\Employee\Application\Features\Certifications\Commands\CreateEmployeeCertification\CreateEmployeeCertificationCommandValidator.cs
+============================================================
+using FluentValidation;
+
+namespace HRMS.Application.Features.Certifications.Commands.CreateEmployeeCertification;
+
+public class CreateEmployeeCertificationCommandValidator
+    : AbstractValidator<CreateEmployeeCertificationCommand>
+{
+    public CreateEmployeeCertificationCommandValidator()
+    {
+        RuleFor(x => x.EmployeeId)
+            .NotEmpty();
+
+        RuleFor(x => x.CertificationId)
+            .NotEmpty();
+
+        RuleFor(x => x.CertificationNumber)
+            .MaximumLength(100)
+            .When(x => !string.IsNullOrWhiteSpace(x.CertificationNumber));
+
+        RuleFor(x => x.IssueDate)
+            .LessThanOrEqualTo(
+                DateOnly.FromDateTime(DateTime.Today));
+
+        RuleFor(x => x.ExpiryDate)
+            .GreaterThan(x => x.IssueDate)
+            .When(x => x.ExpiryDate.HasValue);
+
+        RuleFor(x => x.CredentialUrl)
+            .MaximumLength(500)
+            .When(x => !string.IsNullOrWhiteSpace(x.CredentialUrl));
+    }
+}
+
+
+============================================================
+FILE: D:\Project\vsProject\HRMS\src\Modules\Employee\Application\Features\Dependents\Commands\CreateEmployeeDependent\CreateEmployeeDependentCommand.cs
+============================================================
+using MediatR;
+
+namespace HRMS.Application.Features.Dependents.Commands.CreateEmployeeDependent;
+
+public record CreateEmployeeDependentCommand : IRequest<Guid>
+{
+    public Guid EmployeeId { get; init; }
+
+    public string Name { get; init; } = string.Empty;
+
+    public Guid RelationshipId { get; init; }
+
+    public Guid GenderId { get; init; }
+
+    public DateOnly DateOfBirth { get; init; }
+
+    public string? PhoneNumber { get; init; }
+
+    public string? Email { get; init; }
+
+    public bool IsDependent { get; init; } = true;
+
+    public bool IsActive { get; init; } = true;
+}
+
+
+============================================================
+FILE: D:\Project\vsProject\HRMS\src\Modules\Employee\Application\Features\Dependents\Commands\CreateEmployeeDependent\CreateEmployeeDependentCommandHandler.cs
+============================================================
+using HRMS.Application.Features.Dependents.BusinessRules;
+using HRMS.BuildingBlocks.Application.Abstractions.Persistence;
+using HRMS.Modules.Employee.Domain.Entities;
+using MediatR;
+
+namespace HRMS.Application.Features.Dependents.Commands.CreateEmployeeDependent;
+
+public class CreateEmployeeDependentCommandHandler
+    : IRequestHandler<CreateEmployeeDependentCommand, Guid>
+{
+    private readonly IWriteRepository<EmployeeDependent, Guid> _writeRepository;
+    private readonly EmployeeDependentBusinessRules _businessRules;
+
+    public CreateEmployeeDependentCommandHandler(
+        IWriteRepository<EmployeeDependent, Guid> writeRepository,
+        EmployeeDependentBusinessRules businessRules)
+    {
+        _writeRepository = writeRepository;
+        _businessRules = businessRules;
+    }
+
+    public async Task<Guid> Handle(
+        CreateEmployeeDependentCommand request,
+        CancellationToken cancellationToken)
+    {
+        await _businessRules.EnsureEmployeeExistsAsync(
+            request.EmployeeId,
+            cancellationToken);
+
+        await _businessRules.EnsureRelationshipExistsAsync(
+            request.RelationshipId,
+            cancellationToken);
+
+        await _businessRules.EnsureGenderExistsAsync(
+            request.GenderId,
+            cancellationToken);
+
+        var dependent = new EmployeeDependent
+        {
+            Id = Guid.NewGuid(),
+            EmployeeId = request.EmployeeId,
+            Name = request.Name,
+            RelationshipId = request.RelationshipId,
+            GenderId = request.GenderId,
+            DateOfBirth = request.DateOfBirth,
+            PhoneNumber = request.PhoneNumber,
+            Email = request.Email,
+            IsDependent = request.IsDependent,
+            IsActive = request.IsActive
+        };
+
+        await _writeRepository.AddAsync(
+            dependent,
+            cancellationToken);
+
+        return dependent.Id;
+    }
+}
+
+
+============================================================
+FILE: D:\Project\vsProject\HRMS\src\Modules\Employee\Application\Features\Dependents\Commands\CreateEmployeeDependent\CreateEmployeeDependentCommandValidator.cs
+============================================================
+using FluentValidation;
+
+namespace HRMS.Application.Features.Dependents.Commands.CreateEmployeeDependent;
+
+public class CreateEmployeeDependentCommandValidator
+    : AbstractValidator<CreateEmployeeDependentCommand>
+{
+    public CreateEmployeeDependentCommandValidator()
+    {
+        RuleFor(x => x.EmployeeId)
+            .NotEmpty();
+
+        RuleFor(x => x.Name)
+            .NotEmpty()
+            .MaximumLength(150);
+
+        RuleFor(x => x.RelationshipId)
+            .NotEmpty();
+
+        RuleFor(x => x.GenderId)
+            .NotEmpty();
+
+        RuleFor(x => x.DateOfBirth)
+            .LessThan(DateOnly.FromDateTime(DateTime.Today));
+
+        RuleFor(x => x.PhoneNumber)
+            .MaximumLength(20)
+            .When(x => !string.IsNullOrWhiteSpace(x.PhoneNumber));
+
+        RuleFor(x => x.Email)
+            .EmailAddress()
+            .MaximumLength(200)
+            .When(x => !string.IsNullOrWhiteSpace(x.Email));
+    }
+}
+
+
+============================================================
+FILE: D:\Project\vsProject\HRMS\src\Modules\Employee\Application\Features\Documents\Commands\CreateEmployeeDocument\CreateEmployeeDocumentCommand.cs
+============================================================
+using MediatR;
+
+namespace HRMS.Application.Features.Documents.Commands.CreateEmployeeDocument;
+
+public record CreateEmployeeDocumentCommand : IRequest<Guid>
+{
+    public Guid EmployeeId { get; init; }
+
+    public Guid DocumentTypeId { get; init; }
+
+    public string DocumentName { get; init; } = string.Empty;
+
+    public string FileName { get; init; } = string.Empty;
+
+    public string StorageKey { get; init; } = string.Empty;
+
+    public string ContentType { get; init; } = string.Empty;
+
+    public long FileSize { get; init; }
+}
+
+
+============================================================
+FILE: D:\Project\vsProject\HRMS\src\Modules\Employee\Application\Features\Documents\Commands\CreateEmployeeDocument\CreateEmployeeDocumentCommandHandler.cs
+============================================================
+using HRMS.Application.Features.Documents.BusinessRules;
+using HRMS.BuildingBlocks.Application.Abstractions.Persistence;
+using HRMS.Modules.Employee.Domain.Entities;
+using MediatR;
+
+namespace HRMS.Application.Features.Documents.Commands.CreateEmployeeDocument;
+
+public class CreateEmployeeDocumentCommandHandler
+    : IRequestHandler<CreateEmployeeDocumentCommand, Guid>
+{
+    private readonly IWriteRepository<EmployeeDocument, Guid> _writeRepository;
+    private readonly EmployeeDocumentBusinessRules _businessRules;
+
+    public CreateEmployeeDocumentCommandHandler(
+        IWriteRepository<EmployeeDocument, Guid> writeRepository,
+        EmployeeDocumentBusinessRules businessRules)
+    {
+        _writeRepository = writeRepository;
+        _businessRules = businessRules;
+    }
+
+    public async Task<Guid> Handle(
+        CreateEmployeeDocumentCommand request,
+        CancellationToken cancellationToken)
+    {
+        await _businessRules.EnsureEmployeeExistsAsync(
+            request.EmployeeId,
+            cancellationToken);
+
+        await _businessRules.EnsureDocumentTypeExistsAsync(
+            request.DocumentTypeId,
+            cancellationToken);
+
+        await _businessRules.EnsureStorageKeyAvailableAsync(
+            request.StorageKey,
+            cancellationToken);
+
+        var document = new EmployeeDocument
+        {
+            Id = Guid.NewGuid(),
+            EmployeeId = request.EmployeeId,
+            DocumentTypeId = request.DocumentTypeId,
+            DocumentName = request.DocumentName,
+            FileName = request.FileName,
+            StorageKey = request.StorageKey,
+            ContentType = request.ContentType,
+            FileSize = request.FileSize,
+            UploadedOn = DateTimeOffset.UtcNow,
+            IsVerified = false,
+            VerifiedOn = null,
+            IsActive = true
+        };
+
+        await _writeRepository.AddAsync(
+            document,
+            cancellationToken);
+
+        return document.Id;
+    }
+}
+
+
+============================================================
+FILE: D:\Project\vsProject\HRMS\src\Modules\Employee\Application\Features\Documents\Commands\CreateEmployeeDocument\CreateEmployeeDocumentCommandValidator.cs
+============================================================
+using FluentValidation;
+
+namespace HRMS.Application.Features.Documents.Commands.CreateEmployeeDocument;
+
+public class CreateEmployeeDocumentCommandValidator
+    : AbstractValidator<CreateEmployeeDocumentCommand>
+{
+    public CreateEmployeeDocumentCommandValidator()
+    {
+        RuleFor(x => x.EmployeeId)
+            .NotEmpty();
+
+        RuleFor(x => x.DocumentTypeId)
+            .NotEmpty();
+
+        RuleFor(x => x.DocumentName)
+            .NotEmpty()
+            .MaximumLength(150);
+
+        RuleFor(x => x.FileName)
+            .NotEmpty()
+            .MaximumLength(255);
+
+        RuleFor(x => x.StorageKey)
+            .NotEmpty()
+            .MaximumLength(500);
+
+        RuleFor(x => x.ContentType)
+            .NotEmpty()
+            .MaximumLength(100);
+
+        RuleFor(x => x.FileSize)
+            .GreaterThan(0);
+    }
+}
+
+
+============================================================
+FILE: D:\Project\vsProject\HRMS\src\Modules\Employee\Application\Features\Educations\Commands\CreateEmployeeEducation\CreateEmployeeEducationCommand.cs
+============================================================
+using MediatR;
+
+namespace HRMS.Application.Features.Educations.Commands.CreateEmployeeEducation;
+
+public record CreateEmployeeEducationCommand : IRequest<Guid>
+{
+    public Guid EmployeeId { get; init; }
+
+    public string EducationLevel { get; init; } = string.Empty;
+
+    public string Qualification { get; init; } = string.Empty;
+
+    public string? Specialization { get; init; }
+
+    public string InstitutionName { get; init; } = string.Empty;
+
+    public string? UniversityName { get; init; }
+
+    public DateOnly? StartDate { get; init; }
+
+    public DateOnly? EndDate { get; init; }
+
+    public string? Grade { get; init; }
+
+    public bool IsHighestQualification { get; init; }
+}
+
+
+============================================================
+FILE: D:\Project\vsProject\HRMS\src\Modules\Employee\Application\Features\Educations\Commands\CreateEmployeeEducation\CreateEmployeeEducationCommandHandler.cs
+============================================================
+using HRMS.Application.Features.Educations.BusinessRules;
+using HRMS.BuildingBlocks.Application.Abstractions.Persistence;
+using HRMS.Modules.Employee.Domain.Entities;
+using MediatR;
+
+namespace HRMS.Application.Features.Educations.Commands.CreateEmployeeEducation;
+
+public class CreateEmployeeEducationCommandHandler
+    : IRequestHandler<CreateEmployeeEducationCommand, Guid>
+{
+    private readonly IWriteRepository<EmployeeEducation, Guid> _writeRepository;
+    private readonly EmployeeEducationBusinessRules _businessRules;
+
+    public CreateEmployeeEducationCommandHandler(
+        IWriteRepository<EmployeeEducation, Guid> writeRepository,
+        EmployeeEducationBusinessRules businessRules)
+    {
+        _writeRepository = writeRepository;
+        _businessRules = businessRules;
+    }
+
+    public async Task<Guid> Handle(
+        CreateEmployeeEducationCommand request,
+        CancellationToken cancellationToken)
+    {
+        await _businessRules.EnsureEmployeeExistsAsync(
+            request.EmployeeId,
+            cancellationToken);
+
+        if (request.IsHighestQualification)
+        {
+            await _businessRules.EnsureHighestQualificationAvailableAsync(
+                request.EmployeeId,
+                cancellationToken);
+        }
+
+        var education = new EmployeeEducation
+        {
+            Id = Guid.NewGuid(),
+            EmployeeId = request.EmployeeId,
+            EducationLevel = request.EducationLevel,
+            Qualification = request.Qualification,
+            Specialization = request.Specialization,
+            InstitutionName = request.InstitutionName,
+            UniversityName = request.UniversityName,
+            StartDate = request.StartDate,
+            EndDate = request.EndDate,
+            Grade = request.Grade,
+            IsHighestQualification = request.IsHighestQualification,
+            IsVerified = false,
+            VerifiedOn = null
+        };
+
+        await _writeRepository.AddAsync(
+            education,
+            cancellationToken);
+
+        return education.Id;
+    }
+}
+
+
+============================================================
+FILE: D:\Project\vsProject\HRMS\src\Modules\Employee\Application\Features\Educations\Commands\CreateEmployeeEducation\CreateEmployeeEducationCommandValidator.cs
+============================================================
+using FluentValidation;
+
+namespace HRMS.Application.Features.Educations.Commands.CreateEmployeeEducation;
+
+public class CreateEmployeeEducationCommandValidator
+    : AbstractValidator<CreateEmployeeEducationCommand>
+{
+    public CreateEmployeeEducationCommandValidator()
+    {
+        RuleFor(x => x.EmployeeId)
+            .NotEmpty();
+
+        RuleFor(x => x.EducationLevel)
+            .NotEmpty()
+            .MaximumLength(100);
+
+        RuleFor(x => x.Qualification)
+            .NotEmpty()
+            .MaximumLength(200);
+
+        RuleFor(x => x.Specialization)
+            .MaximumLength(200)
+            .When(x => !string.IsNullOrWhiteSpace(x.Specialization));
+
+        RuleFor(x => x.InstitutionName)
+            .NotEmpty()
+            .MaximumLength(200);
+
+        RuleFor(x => x.UniversityName)
+            .MaximumLength(200)
+            .When(x => !string.IsNullOrWhiteSpace(x.UniversityName));
+
+        RuleFor(x => x.EndDate)
+            .GreaterThanOrEqualTo(x => x.StartDate)
+            .When(x => x.StartDate.HasValue && x.EndDate.HasValue);
+
+        RuleFor(x => x.Grade)
+            .MaximumLength(50)
+            .When(x => !string.IsNullOrWhiteSpace(x.Grade));
+    }
+}
+
+
+============================================================
+FILE: D:\Project\vsProject\HRMS\src\Modules\Employee\Application\Features\EmployeeAddresses\Commands\CreateEmployeeAddress\CreateEmployeeAddressCommand.cs
+============================================================
+using MediatR;
+
+namespace HRMS.Application.Features.EmployeeAddresses.Commands.CreateEmployeeAddress;
+
+public record CreateEmployeeAddressCommand : IRequest<Guid>
+{
+    public Guid EmployeeId { get; init; }
+
+    public Guid AddressTypeId { get; init; }
+
+    public Guid CountryId { get; init; }
+
+    public Guid StateId { get; init; }
+
+    public string AddressLine1 { get; init; } = string.Empty;
+
+    public string? AddressLine2 { get; init; }
+
+    public string City { get; init; } = string.Empty;
+
+    public string PostalCode { get; init; } = string.Empty;
+
+    public bool IsPrimary { get; init; }
+}
+
+
+============================================================
+FILE: D:\Project\vsProject\HRMS\src\Modules\Employee\Application\Features\EmployeeAddresses\Commands\CreateEmployeeAddress\CreateEmployeeAddressCommandHandler.cs
+============================================================
+using HRMS.Application.Features.EmployeeAddresses.BusinessRules;
+using HRMS.BuildingBlocks.Application.Abstractions.Persistence;
+using HRMS.Modules.Employee.Domain.Entities;
+using MediatR;
+
+namespace HRMS.Application.Features.EmployeeAddresses.Commands.CreateEmployeeAddress;
+
+public class CreateEmployeeAddressCommandHandler
+    : IRequestHandler<CreateEmployeeAddressCommand, Guid>
+{
+    private readonly IWriteRepository<EmployeeAddress, Guid> _writeRepository;
+    private readonly EmployeeAddressBusinessRules _businessRules;
+
+    public CreateEmployeeAddressCommandHandler(
+        IWriteRepository<EmployeeAddress, Guid> writeRepository,
+        EmployeeAddressBusinessRules businessRules)
+    {
+        _writeRepository = writeRepository;
+        _businessRules = businessRules;
+    }
+
+    public async Task<Guid> Handle(
+        CreateEmployeeAddressCommand request,
+        CancellationToken cancellationToken)
+    {
+        await _businessRules.EnsureEmployeeExistsAsync(
+            request.EmployeeId,
+            cancellationToken);
+
+        await _businessRules.EnsureAddressTypeExistsAsync(
+            request.AddressTypeId,
+            cancellationToken);
+
+        await _businessRules.EnsureCountryExistsAsync(
+            request.CountryId,
+            cancellationToken);
+
+        await _businessRules.EnsureStateBelongsToCountryAsync(
+            request.StateId,
+            request.CountryId,
+            cancellationToken);
+
+        await _businessRules.EnsureAddressTypeAvailableAsync(
+            request.EmployeeId,
+            request.AddressTypeId,
+            cancellationToken);
+
+        if (request.IsPrimary)
+        {
+            await _businessRules.EnsurePrimaryAddressAvailableAsync(
+                request.EmployeeId,
+                cancellationToken);
+        }
+
+        var employeeAddress = new EmployeeAddress
+        {
+            Id = Guid.NewGuid(),
+            EmployeeId = request.EmployeeId,
+            AddressTypeId = request.AddressTypeId,
+            CountryId = request.CountryId,
+            StateId = request.StateId,
+            AddressLine1 = request.AddressLine1,
+            AddressLine2 = request.AddressLine2,
+            City = request.City,
+            PostalCode = request.PostalCode,
+            IsPrimary = request.IsPrimary
+        };
+
+        await _writeRepository.AddAsync(
+            employeeAddress,
+            cancellationToken);
+
+        return employeeAddress.Id;
+    }
+}
+
+
+============================================================
+FILE: D:\Project\vsProject\HRMS\src\Modules\Employee\Application\Features\EmployeeAddresses\Commands\CreateEmployeeAddress\CreateEmployeeAddressCommandValidator.cs
+============================================================
+using FluentValidation;
+
+namespace HRMS.Application.Features.EmployeeAddresses.Commands.CreateEmployeeAddress;
+
+public class CreateEmployeeAddressCommandValidator
+    : AbstractValidator<CreateEmployeeAddressCommand>
+{
+    public CreateEmployeeAddressCommandValidator()
+    {
+        RuleFor(x => x.EmployeeId)
+            .NotEmpty();
+
+        RuleFor(x => x.AddressTypeId)
+            .NotEmpty();
+
+        RuleFor(x => x.CountryId)
+            .NotEmpty();
+
+        RuleFor(x => x.StateId)
+            .NotEmpty();
+
+        RuleFor(x => x.AddressLine1)
+            .NotEmpty()
+            .MaximumLength(250);
+
+        RuleFor(x => x.AddressLine2)
+            .MaximumLength(250)
+            .When(x => !string.IsNullOrWhiteSpace(x.AddressLine2));
+
+        RuleFor(x => x.City)
+            .NotEmpty()
+            .MaximumLength(100);
+
+        RuleFor(x => x.PostalCode)
+            .NotEmpty()
+            .MaximumLength(20);
+    }
+}
+
+
+============================================================
+FILE: D:\Project\vsProject\HRMS\src\Modules\Employee\Application\Features\EmployeeContacts\Commands\CreateEmployeeContact\CreateEmployeeContactCommand.cs
+============================================================
+using MediatR;
+
+namespace HRMS.Application.Features.EmployeeContacts.Commands.CreateEmployeeContact;
+
+public record CreateEmployeeContactCommand : IRequest<Guid>
+{
+    public Guid EmployeeId { get; init; }
+
+    public string ContactType { get; init; } = string.Empty;
+
+    public string ContactValue { get; init; } = string.Empty;
+
+    public bool IsPrimary { get; init; }
+}
+
+
+============================================================
+FILE: D:\Project\vsProject\HRMS\src\Modules\Employee\Application\Features\EmployeeContacts\Commands\CreateEmployeeContact\CreateEmployeeContactCommandHandler.cs
+============================================================
+using HRMS.Application.Features.EmployeeContacts.BusinessRules;
+using HRMS.BuildingBlocks.Application.Abstractions.Persistence;
+using HRMS.Modules.Employee.Domain.Entities;
+using MediatR;
+
+namespace HRMS.Application.Features.EmployeeContacts.Commands.CreateEmployeeContact;
+
+public class CreateEmployeeContactCommandHandler
+    : IRequestHandler<CreateEmployeeContactCommand, Guid>
+{
+    private readonly IWriteRepository<EmployeeContact, Guid> _writeRepository;
+    private readonly EmployeeContactBusinessRules _businessRules;
+
+    public CreateEmployeeContactCommandHandler(
+        IWriteRepository<EmployeeContact, Guid> writeRepository,
+        EmployeeContactBusinessRules businessRules)
+    {
+        _writeRepository = writeRepository;
+        _businessRules = businessRules;
+    }
+
+    public async Task<Guid> Handle(
+        CreateEmployeeContactCommand request,
+        CancellationToken cancellationToken)
+    {
+        await _businessRules.EnsureEmployeeExistsAsync(
+            request.EmployeeId,
+            cancellationToken);
+
+        await _businessRules.EnsureContactNotDuplicateAsync(
+            request.EmployeeId,
+            request.ContactType,
+            request.ContactValue,
+            cancellationToken);
+
+        if (request.IsPrimary)
+        {
+            await _businessRules.EnsurePrimaryContactAvailableAsync(
+                request.EmployeeId,
+                request.ContactType,
+                cancellationToken);
+        }
+
+        var employeeContact = new EmployeeContact
+        {
+            Id = Guid.NewGuid(),
+            EmployeeId = request.EmployeeId,
+            ContactType = request.ContactType,
+            ContactValue = request.ContactValue,
+            IsPrimary = request.IsPrimary
+        };
+
+        await _writeRepository.AddAsync(
+            employeeContact,
+            cancellationToken);
+
+        return employeeContact.Id;
+    }
+}
+
+
+============================================================
+FILE: D:\Project\vsProject\HRMS\src\Modules\Employee\Application\Features\EmployeeContacts\Commands\CreateEmployeeContact\CreateEmployeeContactCommandValidator.cs
+============================================================
+using FluentValidation;
+
+namespace HRMS.Application.Features.EmployeeContacts.Commands.CreateEmployeeContact;
+
+public class CreateEmployeeContactCommandValidator
+    : AbstractValidator<CreateEmployeeContactCommand>
+{
+    public CreateEmployeeContactCommandValidator()
+    {
+        RuleFor(x => x.EmployeeId)
+            .NotEmpty();
+
+        RuleFor(x => x.ContactType)
+            .NotEmpty()
+            .MaximumLength(30);
+
+        RuleFor(x => x.ContactValue)
+            .NotEmpty()
+            .MaximumLength(200);
+    }
+}
+
+
+============================================================
+FILE: D:\Project\vsProject\HRMS\src\Modules\Employee\Application\Features\Employees\BusinessRules\EmployeeBusinessRules.cs
+============================================================
+using HRMS.BuildingBlocks.Application.Abstractions.Persistence;
+using HRMS.BuildingBlocks.Application.Exceptions;
+using HRMS.Modules.Department.Domain.Entities;
+using HRMS.Modules.Employee.Domain.Entities;
+using HRMS.Modules.Foundation.Domain.Entities;
+
+namespace HRMS.Application.Features.Employees.BusinessRules;
+
+public class EmployeeBusinessRules
+{
+    private readonly IReadRepository<Employee, Guid> _employeeRepository;
+    private readonly IReadRepository<Department, Guid> _departmentRepository;
+    private readonly IReadRepository<Gender, Guid> _genderRepository;
+    private readonly IReadRepository<MaritalStatus, Guid> _maritalStatusRepository;
+
+    public EmployeeBusinessRules(
+        IReadRepository<Employee, Guid> employeeRepository,
+        IReadRepository<Department, Guid> departmentRepository,
+        IReadRepository<Gender, Guid> genderRepository,
+        IReadRepository<MaritalStatus, Guid> maritalStatusRepository)
+    {
+        _employeeRepository = employeeRepository;
+        _departmentRepository = departmentRepository;
+        _genderRepository = genderRepository;
+        _maritalStatusRepository = maritalStatusRepository;
+    }
+
+    public async Task EnsureEmployeeExistsAsync(
+        Guid employeeId,
+        CancellationToken cancellationToken = default)
+    {
+        var employee = await _employeeRepository.GetByIdAsync(
+            employeeId,
+            cancellationToken);
+
+        if (employee is null)
+        {
+            throw new NotFoundException(
+                "Employee",
+                employeeId);
+        }
+    }
+
+    public async Task EnsureEmployeeCodeUniqueAsync(
+        string employeeCode,
+        CancellationToken cancellationToken = default)
+    {
+        var exists = await _employeeRepository.AnyAsync(
+            x => x.EmployeeCode == employeeCode,
+            cancellationToken);
+
+        if (exists)
+        {
+            throw new ConflictException(
+                "Employee code already exists.");
+        }
+    }
+
+    public async Task EnsureEmployeeCodeUniqueAsync(
+        string employeeCode,
+        Guid employeeId,
+        CancellationToken cancellationToken = default)
+    {
+        var exists = await _employeeRepository.AnyAsync(
+            x => x.EmployeeCode == employeeCode &&
+                 x.Id != employeeId,
+            cancellationToken);
+
+        if (exists)
+        {
+            throw new ConflictException(
+                "Employee code already exists.");
+        }
+    }
+
+    public async Task EnsureEmailUniqueAsync(
+        string email,
+        CancellationToken cancellationToken = default)
+    {
+        var exists = await _employeeRepository.AnyAsync(
+            x => x.Email == email,
+            cancellationToken);
+
+        if (exists)
+        {
+            throw new ConflictException(
+                "Employee email already exists.");
+        }
+    }
+
+    public async Task EnsureEmailUniqueAsync(
+        string email,
+        Guid employeeId,
+        CancellationToken cancellationToken = default)
+    {
+        var exists = await _employeeRepository.AnyAsync(
+            x => x.Email == email &&
+                 x.Id != employeeId,
+            cancellationToken);
+
+        if (exists)
+        {
+            throw new ConflictException(
+                "Employee email already exists.");
+        }
+    }
+
+    public async Task EnsureDepartmentExistsAsync(
+        Guid departmentId,
+        CancellationToken cancellationToken = default)
+    {
+        var department = await _departmentRepository.GetByIdAsync(
+            departmentId,
+            cancellationToken);
+
+        if (department is null)
+        {
+            throw new NotFoundException(
+                "Department",
+                departmentId);
+        }
+    }
+
+    public async Task EnsureGenderExistsAsync(
+        Guid genderId,
+        CancellationToken cancellationToken = default)
+    {
+        var gender = await _genderRepository.GetByIdAsync(
+            genderId,
+            cancellationToken);
+
+        if (gender is null)
+        {
+            throw new NotFoundException(
+                "Gender",
+                genderId);
+        }
+    }
+
+    public async Task EnsureMaritalStatusExistsAsync(
+        Guid maritalStatusId,
+        CancellationToken cancellationToken = default)
+    {
+        var maritalStatus = await _maritalStatusRepository.GetByIdAsync(
+            maritalStatusId,
+            cancellationToken);
+
+        if (maritalStatus is null)
+        {
+            throw new NotFoundException(
+                "MaritalStatus",
+                maritalStatusId);
+        }
+    }
+}
+
+
+============================================================
+FILE: D:\Project\vsProject\HRMS\src\Modules\Employee\Application\Features\Employees\Commands\CreateEmployee\CreateEmployeeCommand.cs
+============================================================
+using MediatR;
+
+namespace HRMS.Application.Features.Employees.Commands.CreateEmployee;
+
+public record CreateEmployeeCommand : IRequest<Guid>
+{
+    public string EmployeeCode { get; init; } = string.Empty;
+
+    public string FirstName { get; init; } = string.Empty;
+
+    public string LastName { get; init; } = string.Empty;
+
+    public string Email { get; init; } = string.Empty;
+
+    public string? PhoneNumber { get; init; }
+
+    public DateOnly DateOfBirth { get; init; }
+
+    public DateOnly DateOfJoining { get; init; }
+
+    public Guid DepartmentId { get; init; }
+
+    public Guid GenderId { get; init; }
+
+    public Guid MaritalStatusId { get; init; }
+}
+
+
+============================================================
+FILE: D:\Project\vsProject\HRMS\src\Modules\Employee\Application\Features\Employees\Commands\CreateEmployee\CreateEmployeeCommandHandler.cs
+============================================================
+using AutoMapper;
+using HRMS.Application.Features.Employees.BusinessRules;
+using HRMS.Modules.Department.Domain.Entities;
+using HRMS.Modules.Employee.Domain.Entities;
+using MediatR;
+
+namespace HRMS.Application.Features.Employees.Commands.CreateEmployee;
+
+public class CreateEmployeeCommandHandler
+    : IRequestHandler<CreateEmployeeCommand, Guid>
+{
+    private readonly BuildingBlocks.Application.Abstractions.Persistence.IReadRepository<Employee, Guid> _employeeReadRepository;
+    private readonly BuildingBlocks.Application.Abstractions.Persistence.IWriteRepository<Employee, Guid> _employeeWriteRepository;
+    private readonly BuildingBlocks.Application.Abstractions.Persistence.IReadRepository<Department, Guid> _departmentReadRepository;
+    private readonly IMapper _mapper;
+    private readonly EmployeeBusinessRules _employeeRules;
+
+    public CreateEmployeeCommandHandler(
+        BuildingBlocks.Application.Abstractions.Persistence.IReadRepository<Employee, Guid> employeeReadRepository,
+        BuildingBlocks.Application.Abstractions.Persistence.IWriteRepository<Employee, Guid> employeeWriteRepository,
+        BuildingBlocks.Application.Abstractions.Persistence.IReadRepository<Department, Guid> departmentReadRepository,
+        IMapper mapper,
+        EmployeeBusinessRules employeeRules)
+    {
+        _employeeReadRepository = employeeReadRepository;
+        _employeeWriteRepository = employeeWriteRepository;
+        _departmentReadRepository = departmentReadRepository;
+        _mapper = mapper;
+        _employeeRules = employeeRules;
+    }
+
+    public async Task<Guid> Handle(
+    CreateEmployeeCommand request,
+    CancellationToken cancellationToken)
+    {
+        await _employeeRules.EnsureEmployeeCodeUniqueAsync(
+            request.EmployeeCode,
+            cancellationToken);
+
+        await _employeeRules.EnsureEmailUniqueAsync(
+            request.Email,
+            cancellationToken);
+
+        await _employeeRules.EnsureDepartmentExistsAsync(
+            request.DepartmentId,
+            cancellationToken);
+
+        var employee = _mapper.Map<Employee>(request);
+
+        await _employeeWriteRepository.AddAsync(
+            employee,
+            cancellationToken);
+
+        return employee.Id;
+    }
+}
+
+
+============================================================
+FILE: D:\Project\vsProject\HRMS\src\Modules\Employee\Application\Features\Employees\Commands\CreateEmployee\CreateEmployeeCommandValidator.cs
+============================================================
+using FluentValidation;
+
+namespace HRMS.Application.Features.Employees.Commands.CreateEmployee;
+
+public class CreateEmployeeCommandValidator
+    : AbstractValidator<CreateEmployeeCommand>
+{
+    public CreateEmployeeCommandValidator()
+    {
+        RuleFor(x => x.EmployeeCode)
+            .NotEmpty()
+            .MaximumLength(20);
+
+        RuleFor(x => x.FirstName)
+            .NotEmpty()
+            .MaximumLength(100);
+
+        RuleFor(x => x.LastName)
+            .NotEmpty()
+            .MaximumLength(100);
+
+        RuleFor(x => x.Email)
+            .NotEmpty()
+            .EmailAddress()
+            .MaximumLength(200);
+
+        RuleFor(x => x.PhoneNumber)
+            .MaximumLength(20)
+            .When(x => !string.IsNullOrWhiteSpace(x.PhoneNumber));
+
+        RuleFor(x => x.DateOfBirth)
+            .LessThan(DateOnly.FromDateTime(DateTime.Today));
+
+        RuleFor(x => x.DateOfJoining)
+            .LessThanOrEqualTo(DateOnly.FromDateTime(DateTime.Today));
+
+        RuleFor(x => x.DepartmentId)
+            .NotEmpty();
+    }
+}
+
+
+============================================================
+FILE: D:\Project\vsProject\HRMS\src\Modules\Employee\Application\Features\Employees\DTOs\CreateEmployeeDto.cs
+============================================================
+namespace HRMS.Application.Features.Employees.DTOs;
+public class CreateEmployeeDto
+{
+    public string EmployeeCode { get; set; } = string.Empty;
+
+    public string FirstName { get; set; } = string.Empty;
+
+    public string LastName { get; set; } = string.Empty;
+
+    public string Email { get; set; } = string.Empty;
+
+    public string? PhoneNumber { get; set; }
+
+    public DateOnly DateOfBirth { get; set; }
+
+    public DateOnly DateOfJoining { get; set; }
+
+    public Guid DepartmentId { get; set; }
+
+    public Guid GenderId { get; set; }
+
+    public Guid MaritalStatusId { get; set; }
+}
+
+
+============================================================
+FILE: D:\Project\vsProject\HRMS\src\Modules\Employee\Application\Features\Experiences\Commands\CreateEmployeeExperience\CreateEmployeeExperienceCommand.cs
+============================================================
+using MediatR;
+
+namespace HRMS.Application.Features.Experiences.Commands.CreateEmployeeExperience;
+
+public record CreateEmployeeExperienceCommand : IRequest<Guid>
+{
+    public Guid EmployeeId { get; init; }
+
+    public string CompanyName { get; init; } = string.Empty;
+
+    public string JobTitle { get; init; } = string.Empty;
+
+    public string EmploymentType { get; init; } = string.Empty;
+
+    public DateOnly StartDate { get; init; }
+
+    public DateOnly? EndDate { get; init; }
+
+    public string? Location { get; init; }
+
+    public string? Responsibilities { get; init; }
+}
+
+
+============================================================
+FILE: D:\Project\vsProject\HRMS\src\Modules\Employee\Application\Features\Experiences\Commands\CreateEmployeeExperience\CreateEmployeeExperienceCommandHandler.cs
+============================================================
+using HRMS.Application.Features.Experiences.BusinessRules;
+using HRMS.BuildingBlocks.Application.Abstractions.Persistence;
+using HRMS.Modules.Employee.Domain.Entities;
+using MediatR;
+
+namespace HRMS.Application.Features.Experiences.Commands.CreateEmployeeExperience;
+
+public class CreateEmployeeExperienceCommandHandler
+    : IRequestHandler<CreateEmployeeExperienceCommand, Guid>
+{
+    private readonly IWriteRepository<EmployeeExperience, Guid> _writeRepository;
+    private readonly EmployeeExperienceBusinessRules _businessRules;
+
+    public CreateEmployeeExperienceCommandHandler(
+        IWriteRepository<EmployeeExperience, Guid> writeRepository,
+        EmployeeExperienceBusinessRules businessRules)
+    {
+        _writeRepository = writeRepository;
+        _businessRules = businessRules;
+    }
+
+    public async Task<Guid> Handle(
+        CreateEmployeeExperienceCommand request,
+        CancellationToken cancellationToken)
+    {
+        await _businessRules.EnsureEmployeeExistsAsync(
+            request.EmployeeId,
+            cancellationToken);
+
+        var experience = new EmployeeExperience
+        {
+            Id = Guid.NewGuid(),
+            EmployeeId = request.EmployeeId,
+            CompanyName = request.CompanyName,
+            JobTitle = request.JobTitle,
+            EmploymentType = request.EmploymentType,
+            StartDate = request.StartDate,
+            EndDate = request.EndDate,
+            Location = request.Location,
+            Responsibilities = request.Responsibilities
+        };
+
+        await _writeRepository.AddAsync(
+            experience,
+            cancellationToken);
+
+        return experience.Id;
+    }
+}
+
+
+============================================================
+FILE: D:\Project\vsProject\HRMS\src\Modules\Employee\Application\Features\Experiences\Commands\CreateEmployeeExperience\CreateEmployeeExperienceCommandValidator.cs
+============================================================
+using FluentValidation;
+
+namespace HRMS.Application.Features.Experiences.Commands.CreateEmployeeExperience;
+
+public class CreateEmployeeExperienceCommandValidator
+    : AbstractValidator<CreateEmployeeExperienceCommand>
+{
+    public CreateEmployeeExperienceCommandValidator()
+    {
+        RuleFor(x => x.EmployeeId)
+            .NotEmpty();
+
+        RuleFor(x => x.CompanyName)
+            .NotEmpty()
+            .MaximumLength(200);
+
+        RuleFor(x => x.JobTitle)
+            .NotEmpty()
+            .MaximumLength(150);
+
+        RuleFor(x => x.EmploymentType)
+            .NotEmpty()
+            .MaximumLength(50);
+
+        RuleFor(x => x.StartDate)
+            .LessThanOrEqualTo(DateOnly.FromDateTime(DateTime.Today));
+
+        RuleFor(x => x.EndDate)
+            .GreaterThanOrEqualTo(x => x.StartDate)
+            .When(x => x.EndDate.HasValue);
+
+        RuleFor(x => x.Location)
+            .MaximumLength(150)
+            .When(x => !string.IsNullOrWhiteSpace(x.Location));
+
+        RuleFor(x => x.Responsibilities)
+            .MaximumLength(2000)
+            .When(x => !string.IsNullOrWhiteSpace(x.Responsibilities));
+    }
+}
+
+
+============================================================
+FILE: D:\Project\vsProject\HRMS\src\Modules\Employee\Application\Features\Languages\Commands\CreateEmployeeLanguage\CreateEmployeeLanguageCommand.cs
+============================================================
+using MediatR;
+
+namespace HRMS.Application.Features.Languages.Commands.CreateEmployeeLanguage;
+
+public record CreateEmployeeLanguageCommand : IRequest<Guid>
+{
+    public Guid EmployeeId { get; init; }
+
+    public Guid LanguageId { get; init; }
+
+    public string ProficiencyLevel { get; init; } = string.Empty;
+
+    public bool CanRead { get; init; }
+
+    public bool CanWrite { get; init; }
+
+    public bool CanSpeak { get; init; }
+}
+
+
+============================================================
+FILE: D:\Project\vsProject\HRMS\src\Modules\Employee\Application\Features\Languages\Commands\CreateEmployeeLanguage\CreateEmployeeLanguageCommandHandler.cs
+============================================================
+using HRMS.Application.Features.Languages.BusinessRules;
+using HRMS.BuildingBlocks.Application.Abstractions.Persistence;
+using HRMS.Modules.Employee.Domain.Entities;
+using MediatR;
+
+namespace HRMS.Application.Features.Languages.Commands.CreateEmployeeLanguage;
+
+public class CreateEmployeeLanguageCommandHandler
+    : IRequestHandler<CreateEmployeeLanguageCommand, Guid>
+{
+    private readonly IWriteRepository<EmployeeLanguage, Guid> _writeRepository;
+    private readonly EmployeeLanguageBusinessRules _businessRules;
+
+    public CreateEmployeeLanguageCommandHandler(
+        IWriteRepository<EmployeeLanguage, Guid> writeRepository,
+        EmployeeLanguageBusinessRules businessRules)
+    {
+        _writeRepository = writeRepository;
+        _businessRules = businessRules;
+    }
+
+    public async Task<Guid> Handle(
+        CreateEmployeeLanguageCommand request,
+        CancellationToken cancellationToken)
+    {
+        await _businessRules.EnsureEmployeeExistsAsync(
+            request.EmployeeId,
+            cancellationToken);
+
+        await _businessRules.EnsureLanguageExistsAsync(
+            request.LanguageId,
+            cancellationToken);
+
+        await _businessRules.EnsureLanguageAvailableAsync(
+            request.EmployeeId,
+            request.LanguageId,
+            cancellationToken);
+
+        var entity = new EmployeeLanguage
+        {
+            Id = Guid.NewGuid(),
+            EmployeeId = request.EmployeeId,
+            LanguageId = request.LanguageId,
+            ProficiencyLevel = request.ProficiencyLevel,
+            CanRead = request.CanRead,
+            CanWrite = request.CanWrite,
+            CanSpeak = request.CanSpeak,
+            IsActive = true
+        };
+
+        await _writeRepository.AddAsync(
+            entity,
+            cancellationToken);
+
+        return entity.Id;
+    }
+}
+
+
+============================================================
+FILE: D:\Project\vsProject\HRMS\src\Modules\Employee\Application\Features\Languages\Commands\CreateEmployeeLanguage\CreateEmployeeLanguageCommandValidator.cs
+============================================================
+using FluentValidation;
+
+namespace HRMS.Application.Features.Languages.Commands.CreateEmployeeLanguage;
+
+public class CreateEmployeeLanguageCommandValidator
+    : AbstractValidator<CreateEmployeeLanguageCommand>
+{
+    public CreateEmployeeLanguageCommandValidator()
+    {
+        RuleFor(x => x.EmployeeId)
+            .NotEmpty();
+
+        RuleFor(x => x.LanguageId)
+            .NotEmpty();
+
+        RuleFor(x => x.ProficiencyLevel)
+            .NotEmpty()
+            .MaximumLength(50);
+
+        RuleFor(x => x)
+            .Must(x =>
+                x.CanRead ||
+                x.CanWrite ||
+                x.CanSpeak)
+            .WithMessage(
+                "At least one language capability must be selected.");
+    }
+}
+
+
+============================================================
+FILE: D:\Project\vsProject\HRMS\src\Modules\Employee\Application\Features\Nominees\Commands\CreateEmployeeNominee\CreateEmployeeNomineeCommand.cs
+============================================================
+using MediatR;
+
+namespace HRMS.Application.Features.Nominees.Commands.CreateEmployeeNominee;
+
+public record CreateEmployeeNomineeCommand : IRequest<Guid>
+{
+    public Guid EmployeeId { get; init; }
+
+    public string Name { get; init; } = string.Empty;
+
+    public Guid RelationshipId { get; init; }
+
+    public DateOnly DateOfBirth { get; init; }
+
+    public string? PhoneNumber { get; init; }
+
+    public string? Email { get; init; }
+
+    public bool IsMinor { get; init; }
+
+    public bool IsActive { get; init; } = true;
+}
+
+
+============================================================
+FILE: D:\Project\vsProject\HRMS\src\Modules\Employee\Application\Features\Nominees\Commands\CreateEmployeeNominee\CreateEmployeeNomineeCommandHandler.cs
+============================================================
+using HRMS.Application.Features.Nominees.BusinessRules;
+using HRMS.BuildingBlocks.Application.Abstractions.Persistence;
+using HRMS.Modules.Employee.Domain.Entities;
+using MediatR;
+
+namespace HRMS.Application.Features.Nominees.Commands.CreateEmployeeNominee;
+
+public class CreateEmployeeNomineeCommandHandler
+    : IRequestHandler<CreateEmployeeNomineeCommand, Guid>
+{
+    private readonly IWriteRepository<EmployeeNominee, Guid> _writeRepository;
+    private readonly EmployeeNomineeBusinessRules _businessRules;
+
+    public CreateEmployeeNomineeCommandHandler(
+        IWriteRepository<EmployeeNominee, Guid> writeRepository,
+        EmployeeNomineeBusinessRules businessRules)
+    {
+        _writeRepository = writeRepository;
+        _businessRules = businessRules;
+    }
+
+    public async Task<Guid> Handle(
+        CreateEmployeeNomineeCommand request,
+        CancellationToken cancellationToken)
+    {
+        await _businessRules.EnsureEmployeeExistsAsync(
+            request.EmployeeId,
+            cancellationToken);
+
+        await _businessRules.EnsureRelationshipExistsAsync(
+            request.RelationshipId,
+            cancellationToken);
+
+        await _businessRules.EnsureNomineeNotDuplicateAsync(
+            request.EmployeeId,
+            request.Name,
+            request.RelationshipId,
+            cancellationToken);
+
+        var nominee = new EmployeeNominee
+        {
+            Id = Guid.NewGuid(),
+            EmployeeId = request.EmployeeId,
+            Name = request.Name,
+            RelationshipId = request.RelationshipId,
+            DateOfBirth = request.DateOfBirth,
+            PhoneNumber = request.PhoneNumber,
+            Email = request.Email,
+            IsMinor = request.IsMinor,
+            IsActive = request.IsActive
+        };
+
+        await _writeRepository.AddAsync(
+            nominee,
+            cancellationToken);
+
+        return nominee.Id;
+    }
+}
+
+
+============================================================
+FILE: D:\Project\vsProject\HRMS\src\Modules\Employee\Application\Features\Nominees\Commands\CreateEmployeeNominee\CreateEmployeeNomineeCommandValidator.cs
+============================================================
+using FluentValidation;
+
+namespace HRMS.Application.Features.Nominees.Commands.CreateEmployeeNominee;
+
+public class CreateEmployeeNomineeCommandValidator
+    : AbstractValidator<CreateEmployeeNomineeCommand>
+{
+    public CreateEmployeeNomineeCommandValidator()
+    {
+        RuleFor(x => x.EmployeeId)
+            .NotEmpty();
+
+        RuleFor(x => x.Name)
+            .NotEmpty()
+            .MaximumLength(150);
+
+        RuleFor(x => x.RelationshipId)
+            .NotEmpty();
+
+        RuleFor(x => x.DateOfBirth)
+            .LessThan(DateOnly.FromDateTime(DateTime.Today));
+
+        RuleFor(x => x.PhoneNumber)
+            .MaximumLength(20)
+            .When(x => !string.IsNullOrWhiteSpace(x.PhoneNumber));
+
+        RuleFor(x => x.Email)
+            .EmailAddress()
+            .MaximumLength(200)
+            .When(x => !string.IsNullOrWhiteSpace(x.Email));
+
+        RuleFor(x => x.IsMinor)
+            .Equal(true)
+            .When(x => x.DateOfBirth > DateOnly.FromDateTime(DateTime.Today.AddYears(-18)))
+            .WithMessage("Nominee under 18 must be marked as minor.");
+
+        RuleFor(x => x.IsMinor)
+            .Equal(false)
+            .When(x => x.DateOfBirth <= DateOnly.FromDateTime(DateTime.Today.AddYears(-18)))
+            .WithMessage("Nominee aged 18 or above cannot be marked as minor.");
+    }
+}
+
+
+============================================================
+FILE: D:\Project\vsProject\HRMS\src\Modules\Employee\Application\Features\Skills\Commands\CreateEmployeeSkill\CreateEmployeeSkillCommand.cs
+============================================================
+using MediatR;
+
+namespace HRMS.Application.Features.Skills.Commands.CreateEmployeeSkill;
+
+public record CreateEmployeeSkillCommand : IRequest<Guid>
+{
+    public Guid EmployeeId { get; init; }
+
+    public Guid SkillId { get; init; }
+
+    public string ProficiencyLevel { get; init; } = string.Empty;
+
+    public decimal YearsOfExperience { get; init; }
+
+    public bool IsPrimary { get; init; }
+}
+
+
+============================================================
+FILE: D:\Project\vsProject\HRMS\src\Modules\Employee\Application\Features\Skills\Commands\CreateEmployeeSkill\CreateEmployeeSkillCommandHandler.cs
+============================================================
+using HRMS.Application.Features.Skills.BusinessRules;
+using HRMS.BuildingBlocks.Application.Abstractions.Persistence;
+using HRMS.Modules.Employee.Domain.Entities;
+using MediatR;
+
+namespace HRMS.Application.Features.Skills.Commands.CreateEmployeeSkill;
+
+public class CreateEmployeeSkillCommandHandler
+    : IRequestHandler<CreateEmployeeSkillCommand, Guid>
+{
+    private readonly IWriteRepository<EmployeeSkill, Guid> _writeRepository;
+    private readonly EmployeeSkillBusinessRules _businessRules;
+
+    public CreateEmployeeSkillCommandHandler(
+        IWriteRepository<EmployeeSkill, Guid> writeRepository,
+        EmployeeSkillBusinessRules businessRules)
+    {
+        _writeRepository = writeRepository;
+        _businessRules = businessRules;
+    }
+
+    public async Task<Guid> Handle(
+        CreateEmployeeSkillCommand request,
+        CancellationToken cancellationToken)
+    {
+        await _businessRules.EnsureEmployeeExistsAsync(
+            request.EmployeeId,
+            cancellationToken);
+
+        await _businessRules.EnsureSkillExistsAsync(
+            request.SkillId,
+            cancellationToken);
+
+        await _businessRules.EnsureSkillAvailableAsync(
+            request.EmployeeId,
+            request.SkillId,
+            cancellationToken);
+
+        if (request.IsPrimary)
+        {
+            await _businessRules.EnsurePrimarySkillAvailableAsync(
+                request.EmployeeId,
+                cancellationToken);
+        }
+
+        var entity = new EmployeeSkill
+        {
+            Id = Guid.NewGuid(),
+            EmployeeId = request.EmployeeId,
+            SkillId = request.SkillId,
+            ProficiencyLevel = request.ProficiencyLevel,
+            YearsOfExperience = request.YearsOfExperience,
+            IsPrimary = request.IsPrimary,
+            IsActive = true
+        };
+
+        await _writeRepository.AddAsync(
+            entity,
+            cancellationToken);
+
+        return entity.Id;
+    }
+}
+
+
+============================================================
+FILE: D:\Project\vsProject\HRMS\src\Modules\Employee\Application\Features\Skills\Commands\CreateEmployeeSkill\CreateEmployeeSkillCommandValidator.cs
+============================================================
+using FluentValidation;
+
+namespace HRMS.Application.Features.Skills.Commands.CreateEmployeeSkill;
+
+public class CreateEmployeeSkillCommandValidator
+    : AbstractValidator<CreateEmployeeSkillCommand>
+{
+    public CreateEmployeeSkillCommandValidator()
+    {
+        RuleFor(x => x.EmployeeId)
+            .NotEmpty();
+
+        RuleFor(x => x.SkillId)
+            .NotEmpty();
+
+        RuleFor(x => x.ProficiencyLevel)
+            .NotEmpty()
+            .MaximumLength(50);
+
+        RuleFor(x => x.YearsOfExperience)
+            .GreaterThanOrEqualTo(0)
+            .LessThanOrEqualTo(60);
+    }
+}
+

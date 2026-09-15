@@ -1,0 +1,3723 @@
+
+============================================================
+FILE: D:\Project\vsProject\HRMS\src\HRMS.API\Controllers\EmployeeLeaveEntitlementController.cs
+============================================================
+using HRMS.BuildingBlocks.Application.Pagination;
+using HRMS.Modules.Leave.Application.Features.EmployeeLeaveEntitlements.Commands.CreateEmployeeLeaveEntitlement;
+using HRMS.Modules.Leave.Application.Features.EmployeeLeaveEntitlements.Commands.DeleteEmployeeLeaveEntitlement;
+using HRMS.Modules.Leave.Application.Features.EmployeeLeaveEntitlements.Commands.GenerateLeaveCarryForward;
+using HRMS.Modules.Leave.Application.Features.EmployeeLeaveEntitlements.Commands.RollbackLeaveCarryForward;
+using HRMS.Modules.Leave.Application.Features.EmployeeLeaveEntitlements.Commands.UpdateEmployeeLeaveEntitlement;
+using HRMS.Modules.Leave.Application.Features.EmployeeLeaveEntitlements.Queries.GetEmployeeLeaveBalance;
+using HRMS.Modules.Leave.Application.Features.EmployeeLeaveEntitlements.Queries.GetEmployeeLeaveEntitlementById;
+using HRMS.Modules.Leave.Application.Features.EmployeeLeaveEntitlements.Queries.GetEmployeeLeaveEntitlements;
+using MediatR;
+using Microsoft.AspNetCore.Mvc;
+
+namespace HRMS.API.Controllers;
+
+[ApiController]
+[Route("api/[controller]")]
+public class EmployeeLeaveEntitlementController : ControllerBase
+{
+    private readonly IMediator _mediator;
+
+    public EmployeeLeaveEntitlementController(IMediator mediator)
+    {
+        _mediator = mediator;
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> Create(
+        [FromBody] CreateEmployeeLeaveEntitlementCommand command,
+        CancellationToken cancellationToken)
+    {
+        var id = await _mediator.Send(
+            command,
+            cancellationToken);
+
+        return Created(
+            $"/api/EmployeeLeaveEntitlement/{id}",
+            id);
+    }
+
+    [HttpPut("{id:guid}")]
+    public async Task<IActionResult> Update(
+        Guid id,
+        [FromBody] UpdateEmployeeLeaveEntitlementCommand command,
+        CancellationToken cancellationToken)
+    {
+        if (id != command.Id)
+            return BadRequest("Route id and command id must match.");
+
+        await _mediator.Send(
+            command,
+            cancellationToken);
+
+        return NoContent();
+    }
+    [HttpDelete("{id:guid}")]
+    public async Task<IActionResult> Delete(
+        Guid id,
+        CancellationToken cancellationToken)
+    {
+        await _mediator.Send(
+            new DeleteEmployeeLeaveEntitlementCommand(id),
+            cancellationToken);
+
+        return NoContent();
+    }
+    [HttpGet("{id:guid}")]
+    public async Task<IActionResult> GetById(
+        Guid id,
+        CancellationToken cancellationToken)
+    {
+        var result = await _mediator.Send(
+            new GetEmployeeLeaveEntitlementByIdQuery(id),
+            cancellationToken);
+
+        return Ok(result);
+    }
+    [HttpGet]
+    public async Task<IActionResult> GetAll(
+        [FromQuery] PagedRequest request,
+        CancellationToken cancellationToken)
+    {
+        var result = await _mediator.Send(
+            new GetEmployeeLeaveEntitlementsQuery(request),
+            cancellationToken);
+
+        return Ok(result);
+    }
+    [HttpGet("{employeeId:guid}/{leaveYearId:guid}/balance")]
+    public async Task<IActionResult> GetBalance(
+    Guid employeeId,
+    Guid leaveYearId,
+    [FromQuery] Guid? leaveTypeId,
+    CancellationToken cancellationToken)
+    {
+        var result = await _mediator.Send(
+            new GetEmployeeLeaveBalanceQuery(
+                employeeId,
+                leaveYearId,
+                leaveTypeId),
+            cancellationToken);
+
+        if (leaveTypeId.HasValue)
+        {
+            var balance = result.SingleOrDefault();
+
+            if (balance is null)
+            {
+                return NotFound();
+            }
+
+            return Ok(balance);
+        }
+
+        return Ok(result);
+    }
+    [HttpPost("carry-forward")]
+    public async Task<IActionResult> GenerateCarryForward(
+    [FromBody] GenerateLeaveCarryForwardCommand command,
+    CancellationToken cancellationToken)
+    {
+        await _mediator.Send(
+            command,
+            cancellationToken);
+
+        return Ok(new
+        {
+            message = "Leave carry forward generated successfully."
+        });
+    }
+    [HttpPost("carry-forward/rollback")]
+    public async Task<IActionResult> RollbackCarryForward(
+    [FromBody] RollbackLeaveCarryForwardCommand command,
+    CancellationToken cancellationToken)
+    {
+        await _mediator.Send(
+            command,
+            cancellationToken);
+
+        return Ok(new
+        {
+            message = "Leave carry forward rolled back successfully."
+        });
+    }
+}
+
+
+
+
+
+============================================================
+FILE: D:\Project\vsProject\HRMS\src\HRMS.BuildingBlocks\Application\Abstractions\Persistence\IUnitOfWorkTransaction.cs
+============================================================
+namespace HRMS.BuildingBlocks.Application.Abstractions.Persistence;
+
+public interface IUnitOfWorkTransaction
+{
+    Task BeginAsync(
+        CancellationToken cancellationToken = default);
+
+    Task CommitAsync(
+        CancellationToken cancellationToken = default);
+
+    Task RollbackAsync(
+        CancellationToken cancellationToken = default);
+}
+
+
+============================================================
+FILE: D:\Project\vsProject\HRMS\src\HRMS.Persistence\Migrations\20260820102437_AddUsedDaysToEmployeeLeaveEntitlement.cs
+============================================================
+using Microsoft.EntityFrameworkCore.Migrations;
+
+#nullable disable
+
+namespace HRMS.Persistence.Migrations
+{
+    /// <inheritdoc />
+    public partial class AddUsedDaysToEmployeeLeaveEntitlement : Migration
+    {
+        /// <inheritdoc />
+        protected override void Up(MigrationBuilder migrationBuilder)
+        {
+            migrationBuilder.AddColumn<decimal>(
+                name: "UsedDays",
+                table: "EmployeeLeaveEntitlements",
+                type: "decimal(18,2)",
+                precision: 18,
+                scale: 2,
+                nullable: false,
+                defaultValue: 0m);
+        }
+
+        /// <inheritdoc />
+        protected override void Down(MigrationBuilder migrationBuilder)
+        {
+            migrationBuilder.DropColumn(
+                name: "UsedDays",
+                table: "EmployeeLeaveEntitlements");
+        }
+    }
+}
+
+
+============================================================
+FILE: D:\Project\vsProject\HRMS\src\HRMS.Persistence\Migrations\20260820102437_AddUsedDaysToEmployeeLeaveEntitlement.Designer.cs
+============================================================
+// <auto-generated />
+using System;
+using HRMS.Persistence.Context;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+
+#nullable disable
+
+namespace HRMS.Persistence.Migrations
+{
+    [DbContext(typeof(ApplicationDbContext))]
+    [Migration("20260820102437_AddUsedDaysToEmployeeLeaveEntitlement")]
+    partial class AddUsedDaysToEmployeeLeaveEntitlement
+    {
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
+        {
+#pragma warning disable 612, 618
+            modelBuilder
+                .HasAnnotation("ProductVersion", "9.0.11")
+                .HasAnnotation("Relational:MaxIdentifierLength", 128);
+
+            SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
+
+            modelBuilder.Entity("HRMS.Modules.Companies.Domain.Entities.Company", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("CompanyCode")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("DeletedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid?>("ModifiedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("ModifiedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CompanyCode")
+                        .IsUnique();
+
+                    b.HasIndex("CompanyCode", "IsDeleted");
+
+                    b.ToTable("Companies", (string)null);
+                });
+
+            modelBuilder.Entity("HRMS.Modules.Department.Domain.Entities.Department", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("DeletedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid?>("ModifiedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("ModifiedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Departments");
+                });
+
+            modelBuilder.Entity("HRMS.Modules.Employee.Domain.Entities.Employee", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<DateOnly>("DateOfBirth")
+                        .HasColumnType("date");
+
+                    b.Property<DateOnly>("DateOfJoining")
+                        .HasColumnType("date");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("DeletedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("DepartmentId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("EmployeeCode")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("FirstName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("LastName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid?>("ModifiedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("ModifiedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("PhoneNumber")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Employees");
+                });
+
+            modelBuilder.Entity("HRMS.Modules.Identity.Domain.Entities.Permission", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("DeletedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(250)
+                        .HasColumnType("nvarchar(250)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid?>("ModifiedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("ModifiedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
+
+                    b.ToTable("Permissions", (string)null);
+                });
+
+            modelBuilder.Entity("HRMS.Modules.Identity.Domain.Entities.Role", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("DeletedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(250)
+                        .HasColumnType("nvarchar(250)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid?>("ModifiedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("ModifiedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
+
+                    b.ToTable("Roles", (string)null);
+                });
+
+            modelBuilder.Entity("HRMS.Modules.Identity.Domain.Entities.RolePermission", b =>
+                {
+                    b.Property<Guid>("RoleId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("PermissionId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("RoleId", "PermissionId");
+
+                    b.HasIndex("PermissionId");
+
+                    b.ToTable("RolePermissions", (string)null);
+                });
+
+            modelBuilder.Entity("HRMS.Modules.Identity.Domain.Entities.User", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("DeletedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("EmployeeId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid?>("ModifiedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("ModifiedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("PasswordHash")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("UserName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EmployeeId")
+                        .IsUnique();
+
+                    b.HasIndex("UserName")
+                        .IsUnique();
+
+                    b.ToTable("Users", (string)null);
+                });
+
+            modelBuilder.Entity("HRMS.Modules.Identity.Domain.Entities.UserRole", b =>
+                {
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("RoleId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("UserId", "RoleId");
+
+                    b.HasIndex("RoleId");
+
+                    b.ToTable("UserRoles", (string)null);
+                });
+
+            modelBuilder.Entity("HRMS.Modules.Leave.Domain.Entities.EmployeeLeaveEntitlement", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("DeletedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("EmployeeId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("EntitledDays")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid>("LeavePolicyRuleId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("LeaveTypeId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("LeaveYearId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("ModifiedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("ModifiedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<decimal>("UsedDays")
+                        .ValueGeneratedOnAdd()
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)")
+                        .HasDefaultValue(0m);
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("LeavePolicyRuleId");
+
+                    b.HasIndex("LeaveTypeId");
+
+                    b.HasIndex("LeaveYearId");
+
+                    b.HasIndex("EmployeeId", "LeaveYearId", "LeaveTypeId")
+                        .IsUnique()
+                        .HasFilter("[IsDeleted] = 0");
+
+                    b.ToTable("EmployeeLeaveEntitlements", (string)null);
+                });
+
+            modelBuilder.Entity("HRMS.Modules.Leave.Domain.Entities.LeaveDayPart", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<decimal>("DaysValue")
+                        .HasPrecision(4, 2)
+                        .HasColumnType("decimal(4,2)");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("DeletedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid?>("ModifiedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("ModifiedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Code")
+                        .IsUnique();
+
+                    b.ToTable("LeaveDayParts", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("30000000-0000-0000-0000-000000000001"),
+                            Code = "FULL_DAY",
+                            CreatedOn = new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            DaysValue = 1.00m,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Full Day"
+                        },
+                        new
+                        {
+                            Id = new Guid("30000000-0000-0000-0000-000000000002"),
+                            Code = "FIRST_HALF",
+                            CreatedOn = new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            DaysValue = 0.50m,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "First Half"
+                        },
+                        new
+                        {
+                            Id = new Guid("30000000-0000-0000-0000-000000000003"),
+                            Code = "SECOND_HALF",
+                            CreatedOn = new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            DaysValue = 0.50m,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Second Half"
+                        });
+                });
+
+            modelBuilder.Entity("HRMS.Modules.Leave.Domain.Entities.LeavePolicy", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("DeletedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid?>("ModifiedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("ModifiedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CompanyId", "Code")
+                        .IsUnique()
+                        .HasFilter("[IsDeleted] = 0");
+
+                    b.HasIndex("CompanyId", "Name")
+                        .IsUnique()
+                        .HasFilter("[IsDeleted] = 0");
+
+                    b.ToTable("LeavePolicies", (string)null);
+                });
+
+            modelBuilder.Entity("HRMS.Modules.Leave.Domain.Entities.LeavePolicyRule", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("AnnualEntitlement")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("DeletedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid>("LeavePolicyId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("LeaveTypeId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("ModifiedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("ModifiedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("LeaveTypeId");
+
+                    b.HasIndex("LeavePolicyId", "LeaveTypeId")
+                        .IsUnique()
+                        .HasFilter("[IsDeleted] = 0");
+
+                    b.ToTable("LeavePolicyRules", (string)null);
+                });
+
+            modelBuilder.Entity("HRMS.Modules.Leave.Domain.Entities.LeaveRequest", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("AppliedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("ApprovalReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<Guid?>("ApprovedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("ApprovedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("CancellationReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<Guid?>("CancelledBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("CancelledOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("DeletedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("EmployeeId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("EndDayPartId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateOnly>("FromDate")
+                        .HasColumnType("date");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid>("LeaveTypeId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("LeaveYearId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("ModifiedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("ModifiedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<Guid?>("RejectedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("RejectedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("RejectionReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<Guid>("StartDayPartId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("StatusId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateOnly>("ToDate")
+                        .HasColumnType("date");
+
+                    b.Property<decimal>("TotalDays")
+                        .HasPrecision(8, 2)
+                        .HasColumnType("decimal(8,2)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EndDayPartId");
+
+                    b.HasIndex("LeaveTypeId");
+
+                    b.HasIndex("LeaveYearId");
+
+                    b.HasIndex("StartDayPartId");
+
+                    b.HasIndex("StatusId");
+
+                    b.HasIndex("EmployeeId", "StatusId");
+
+                    b.HasIndex("EmployeeId", "FromDate", "ToDate");
+
+                    b.HasIndex("EmployeeId", "LeaveYearId", "LeaveTypeId");
+
+                    b.ToTable("LeaveRequests", (string)null);
+                });
+
+            modelBuilder.Entity("HRMS.Modules.Leave.Domain.Entities.LeaveRequestStatus", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("DeletedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid?>("ModifiedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("ModifiedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Code")
+                        .IsUnique();
+
+                    b.ToTable("LeaveRequestStatuses", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("20000000-0000-0000-0000-000000000001"),
+                            Code = "PENDING",
+                            CreatedOn = new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Pending"
+                        },
+                        new
+                        {
+                            Id = new Guid("20000000-0000-0000-0000-000000000002"),
+                            Code = "APPROVED",
+                            CreatedOn = new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Approved"
+                        },
+                        new
+                        {
+                            Id = new Guid("20000000-0000-0000-0000-000000000003"),
+                            Code = "REJECTED",
+                            CreatedOn = new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Rejected"
+                        },
+                        new
+                        {
+                            Id = new Guid("20000000-0000-0000-0000-000000000004"),
+                            Code = "CANCELLED",
+                            CreatedOn = new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Cancelled"
+                        });
+                });
+
+            modelBuilder.Entity("HRMS.Modules.Leave.Domain.Entities.LeaveType", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("DeletedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsPaid")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid?>("ModifiedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("ModifiedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CompanyId", "Code")
+                        .IsUnique()
+                        .HasFilter("[IsDeleted] = 0");
+
+                    b.HasIndex("CompanyId", "Name")
+                        .IsUnique()
+                        .HasFilter("[IsDeleted] = 0");
+
+                    b.ToTable("LeaveTypes", (string)null);
+                });
+
+            modelBuilder.Entity("HRMS.Modules.Leave.Domain.Entities.LeaveYear", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("DeletedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<DateOnly>("EndDate")
+                        .HasColumnType("date");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid?>("ModifiedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("ModifiedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateOnly>("StartDate")
+                        .HasColumnType("date");
+
+                    b.Property<Guid>("StatusId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("StatusId");
+
+                    b.HasIndex("CompanyId", "Code")
+                        .IsUnique()
+                        .HasFilter("[IsDeleted] = 0");
+
+                    b.HasIndex("CompanyId", "Name")
+                        .IsUnique()
+                        .HasFilter("[IsDeleted] = 0");
+
+                    b.HasIndex("CompanyId", "StatusId");
+
+                    b.ToTable("LeaveYears", (string)null);
+                });
+
+            modelBuilder.Entity("HRMS.Modules.Leave.Domain.Entities.LeaveYearStatus", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("DeletedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid?>("ModifiedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("ModifiedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Code")
+                        .IsUnique();
+
+                    b.ToTable("LeaveYearStatuses", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("10000000-0000-0000-0000-000000000001"),
+                            Code = "DRAFT",
+                            CreatedOn = new DateTimeOffset(new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Draft"
+                        },
+                        new
+                        {
+                            Id = new Guid("10000000-0000-0000-0000-000000000002"),
+                            Code = "ACTIVE",
+                            CreatedOn = new DateTimeOffset(new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Active"
+                        },
+                        new
+                        {
+                            Id = new Guid("10000000-0000-0000-0000-000000000003"),
+                            Code = "CLOSED",
+                            CreatedOn = new DateTimeOffset(new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Closed"
+                        });
+                });
+
+            modelBuilder.Entity("HRMS.Modules.Identity.Domain.Entities.RolePermission", b =>
+                {
+                    b.HasOne("HRMS.Modules.Identity.Domain.Entities.Permission", "Permission")
+                        .WithMany("RolePermissions")
+                        .HasForeignKey("PermissionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("HRMS.Modules.Identity.Domain.Entities.Role", "Role")
+                        .WithMany("RolePermissions")
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Permission");
+
+                    b.Navigation("Role");
+                });
+
+            modelBuilder.Entity("HRMS.Modules.Identity.Domain.Entities.UserRole", b =>
+                {
+                    b.HasOne("HRMS.Modules.Identity.Domain.Entities.Role", "Role")
+                        .WithMany("UserRoles")
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("HRMS.Modules.Identity.Domain.Entities.User", "User")
+                        .WithMany("UserRoles")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Role");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("HRMS.Modules.Leave.Domain.Entities.EmployeeLeaveEntitlement", b =>
+                {
+                    b.HasOne("HRMS.Modules.Leave.Domain.Entities.LeavePolicyRule", null)
+                        .WithMany()
+                        .HasForeignKey("LeavePolicyRuleId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("HRMS.Modules.Leave.Domain.Entities.LeaveType", null)
+                        .WithMany()
+                        .HasForeignKey("LeaveTypeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("HRMS.Modules.Leave.Domain.Entities.LeaveYear", null)
+                        .WithMany()
+                        .HasForeignKey("LeaveYearId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("HRMS.Modules.Leave.Domain.Entities.LeavePolicyRule", b =>
+                {
+                    b.HasOne("HRMS.Modules.Leave.Domain.Entities.LeavePolicy", null)
+                        .WithMany()
+                        .HasForeignKey("LeavePolicyId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("HRMS.Modules.Leave.Domain.Entities.LeaveType", null)
+                        .WithMany()
+                        .HasForeignKey("LeaveTypeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("HRMS.Modules.Leave.Domain.Entities.LeaveRequest", b =>
+                {
+                    b.HasOne("HRMS.Modules.Employee.Domain.Entities.Employee", null)
+                        .WithMany()
+                        .HasForeignKey("EmployeeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("HRMS.Modules.Leave.Domain.Entities.LeaveDayPart", null)
+                        .WithMany()
+                        .HasForeignKey("EndDayPartId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("HRMS.Modules.Leave.Domain.Entities.LeaveType", null)
+                        .WithMany()
+                        .HasForeignKey("LeaveTypeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("HRMS.Modules.Leave.Domain.Entities.LeaveYear", null)
+                        .WithMany()
+                        .HasForeignKey("LeaveYearId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("HRMS.Modules.Leave.Domain.Entities.LeaveDayPart", null)
+                        .WithMany()
+                        .HasForeignKey("StartDayPartId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("HRMS.Modules.Leave.Domain.Entities.LeaveRequestStatus", null)
+                        .WithMany()
+                        .HasForeignKey("StatusId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("HRMS.Modules.Leave.Domain.Entities.LeaveYear", b =>
+                {
+                    b.HasOne("HRMS.Modules.Leave.Domain.Entities.LeaveYearStatus", null)
+                        .WithMany()
+                        .HasForeignKey("StatusId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("HRMS.Modules.Identity.Domain.Entities.Permission", b =>
+                {
+                    b.Navigation("RolePermissions");
+                });
+
+            modelBuilder.Entity("HRMS.Modules.Identity.Domain.Entities.Role", b =>
+                {
+                    b.Navigation("RolePermissions");
+
+                    b.Navigation("UserRoles");
+                });
+
+            modelBuilder.Entity("HRMS.Modules.Identity.Domain.Entities.User", b =>
+                {
+                    b.Navigation("UserRoles");
+                });
+#pragma warning restore 612, 618
+        }
+    }
+}
+
+
+============================================================
+FILE: D:\Project\vsProject\HRMS\src\HRMS.Persistence\Migrations\20260821150426_AddCarryForwardDaysToEmployeeLeaveEntitlement.cs
+============================================================
+using Microsoft.EntityFrameworkCore.Migrations;
+
+#nullable disable
+
+namespace HRMS.Persistence.Migrations
+{
+    /// <inheritdoc />
+    public partial class AddCarryForwardDaysToEmployeeLeaveEntitlement : Migration
+    {
+        /// <inheritdoc />
+        protected override void Up(MigrationBuilder migrationBuilder)
+        {
+            migrationBuilder.AddColumn<decimal>(
+                name: "CarryForwardDays",
+                table: "EmployeeLeaveEntitlements",
+                type: "decimal(18,2)",
+                precision: 18,
+                scale: 2,
+                nullable: false,
+                defaultValue: 0m);
+        }
+
+        /// <inheritdoc />
+        protected override void Down(MigrationBuilder migrationBuilder)
+        {
+            migrationBuilder.DropColumn(
+                name: "CarryForwardDays",
+                table: "EmployeeLeaveEntitlements");
+        }
+    }
+}
+
+
+============================================================
+FILE: D:\Project\vsProject\HRMS\src\HRMS.Persistence\Migrations\20260821150426_AddCarryForwardDaysToEmployeeLeaveEntitlement.Designer.cs
+============================================================
+// <auto-generated />
+using System;
+using HRMS.Persistence.Context;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+
+#nullable disable
+
+namespace HRMS.Persistence.Migrations
+{
+    [DbContext(typeof(ApplicationDbContext))]
+    [Migration("20260821150426_AddCarryForwardDaysToEmployeeLeaveEntitlement")]
+    partial class AddCarryForwardDaysToEmployeeLeaveEntitlement
+    {
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
+        {
+#pragma warning disable 612, 618
+            modelBuilder
+                .HasAnnotation("ProductVersion", "9.0.11")
+                .HasAnnotation("Relational:MaxIdentifierLength", 128);
+
+            SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
+
+            modelBuilder.Entity("HRMS.Modules.Companies.Domain.Entities.Company", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("CompanyCode")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("DeletedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid?>("ModifiedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("ModifiedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CompanyCode")
+                        .IsUnique();
+
+                    b.HasIndex("CompanyCode", "IsDeleted");
+
+                    b.ToTable("Companies", (string)null);
+                });
+
+            modelBuilder.Entity("HRMS.Modules.Department.Domain.Entities.Department", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("DeletedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid?>("ModifiedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("ModifiedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Departments");
+                });
+
+            modelBuilder.Entity("HRMS.Modules.Employee.Domain.Entities.Employee", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<DateOnly>("DateOfBirth")
+                        .HasColumnType("date");
+
+                    b.Property<DateOnly>("DateOfJoining")
+                        .HasColumnType("date");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("DeletedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("DepartmentId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("EmployeeCode")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("FirstName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("LastName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid?>("ModifiedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("ModifiedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("PhoneNumber")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Employees");
+                });
+
+            modelBuilder.Entity("HRMS.Modules.Identity.Domain.Entities.Permission", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("DeletedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(250)
+                        .HasColumnType("nvarchar(250)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid?>("ModifiedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("ModifiedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
+
+                    b.ToTable("Permissions", (string)null);
+                });
+
+            modelBuilder.Entity("HRMS.Modules.Identity.Domain.Entities.Role", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("DeletedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(250)
+                        .HasColumnType("nvarchar(250)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid?>("ModifiedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("ModifiedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
+
+                    b.ToTable("Roles", (string)null);
+                });
+
+            modelBuilder.Entity("HRMS.Modules.Identity.Domain.Entities.RolePermission", b =>
+                {
+                    b.Property<Guid>("RoleId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("PermissionId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("RoleId", "PermissionId");
+
+                    b.HasIndex("PermissionId");
+
+                    b.ToTable("RolePermissions", (string)null);
+                });
+
+            modelBuilder.Entity("HRMS.Modules.Identity.Domain.Entities.User", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("DeletedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("EmployeeId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid?>("ModifiedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("ModifiedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("PasswordHash")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("UserName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EmployeeId")
+                        .IsUnique();
+
+                    b.HasIndex("UserName")
+                        .IsUnique();
+
+                    b.ToTable("Users", (string)null);
+                });
+
+            modelBuilder.Entity("HRMS.Modules.Identity.Domain.Entities.UserRole", b =>
+                {
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("RoleId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("UserId", "RoleId");
+
+                    b.HasIndex("RoleId");
+
+                    b.ToTable("UserRoles", (string)null);
+                });
+
+            modelBuilder.Entity("HRMS.Modules.Leave.Domain.Entities.CompanyHoliday", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("DeletedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<DateOnly>("HolidayDate")
+                        .HasColumnType("date");
+
+                    b.Property<string>("HolidayType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsOptional")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid>("LeaveYearId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("ModifiedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("ModifiedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("LeaveYearId", "HolidayDate")
+                        .IsUnique();
+
+                    b.ToTable("CompanyHolidays", (string)null);
+                });
+
+            modelBuilder.Entity("HRMS.Modules.Leave.Domain.Entities.EmployeeLeaveEntitlement", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("CarryForwardDays")
+                        .ValueGeneratedOnAdd()
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)")
+                        .HasDefaultValue(0m);
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("DeletedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("EmployeeId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("EntitledDays")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid>("LeavePolicyRuleId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("LeaveTypeId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("LeaveYearId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("ModifiedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("ModifiedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<decimal>("UsedDays")
+                        .ValueGeneratedOnAdd()
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)")
+                        .HasDefaultValue(0m);
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("LeavePolicyRuleId");
+
+                    b.HasIndex("LeaveTypeId");
+
+                    b.HasIndex("LeaveYearId");
+
+                    b.HasIndex("EmployeeId", "LeaveYearId", "LeaveTypeId")
+                        .IsUnique()
+                        .HasFilter("[IsDeleted] = 0");
+
+                    b.ToTable("EmployeeLeaveEntitlements", (string)null);
+                });
+
+            modelBuilder.Entity("HRMS.Modules.Leave.Domain.Entities.LeaveDayPart", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<decimal>("DaysValue")
+                        .HasPrecision(4, 2)
+                        .HasColumnType("decimal(4,2)");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("DeletedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid?>("ModifiedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("ModifiedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Code")
+                        .IsUnique();
+
+                    b.ToTable("LeaveDayParts", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("30000000-0000-0000-0000-000000000001"),
+                            Code = "FULL_DAY",
+                            CreatedOn = new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            DaysValue = 1.00m,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Full Day"
+                        },
+                        new
+                        {
+                            Id = new Guid("30000000-0000-0000-0000-000000000002"),
+                            Code = "FIRST_HALF",
+                            CreatedOn = new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            DaysValue = 0.50m,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "First Half"
+                        },
+                        new
+                        {
+                            Id = new Guid("30000000-0000-0000-0000-000000000003"),
+                            Code = "SECOND_HALF",
+                            CreatedOn = new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            DaysValue = 0.50m,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Second Half"
+                        });
+                });
+
+            modelBuilder.Entity("HRMS.Modules.Leave.Domain.Entities.LeavePolicy", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("DeletedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid?>("ModifiedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("ModifiedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CompanyId", "Code")
+                        .IsUnique()
+                        .HasFilter("[IsDeleted] = 0");
+
+                    b.HasIndex("CompanyId", "Name")
+                        .IsUnique()
+                        .HasFilter("[IsDeleted] = 0");
+
+                    b.ToTable("LeavePolicies", (string)null);
+                });
+
+            modelBuilder.Entity("HRMS.Modules.Leave.Domain.Entities.LeavePolicyRule", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("AnnualEntitlement")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("DeletedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<bool>("IsCarryForwardAllowed")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid>("LeavePolicyId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("LeaveTypeId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("MaximumCarryForwardDays")
+                        .ValueGeneratedOnAdd()
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)")
+                        .HasDefaultValue(0m);
+
+                    b.Property<Guid?>("ModifiedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("ModifiedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("LeaveTypeId");
+
+                    b.HasIndex("LeavePolicyId", "LeaveTypeId")
+                        .IsUnique()
+                        .HasFilter("[IsDeleted] = 0");
+
+                    b.ToTable("LeavePolicyRules", (string)null);
+                });
+
+            modelBuilder.Entity("HRMS.Modules.Leave.Domain.Entities.LeaveRequest", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("AppliedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("ApprovalReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<Guid?>("ApprovedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("ApprovedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("CancellationReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<Guid?>("CancelledBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("CancelledOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("DeletedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid>("EmployeeId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("EndDayPartId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateOnly>("FromDate")
+                        .HasColumnType("date");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid>("LeaveTypeId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("LeaveYearId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("ModifiedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("ModifiedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<Guid?>("RejectedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("RejectedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("RejectionReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<Guid>("StartDayPartId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("StatusId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateOnly>("ToDate")
+                        .HasColumnType("date");
+
+                    b.Property<decimal>("TotalDays")
+                        .HasPrecision(8, 2)
+                        .HasColumnType("decimal(8,2)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EndDayPartId");
+
+                    b.HasIndex("LeaveTypeId");
+
+                    b.HasIndex("LeaveYearId");
+
+                    b.HasIndex("StartDayPartId");
+
+                    b.HasIndex("StatusId");
+
+                    b.HasIndex("EmployeeId", "StatusId");
+
+                    b.HasIndex("EmployeeId", "FromDate", "ToDate");
+
+                    b.HasIndex("EmployeeId", "LeaveYearId", "LeaveTypeId");
+
+                    b.ToTable("LeaveRequests", (string)null);
+                });
+
+            modelBuilder.Entity("HRMS.Modules.Leave.Domain.Entities.LeaveRequestStatus", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("DeletedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid?>("ModifiedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("ModifiedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Code")
+                        .IsUnique();
+
+                    b.ToTable("LeaveRequestStatuses", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("20000000-0000-0000-0000-000000000001"),
+                            Code = "PENDING",
+                            CreatedOn = new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Pending"
+                        },
+                        new
+                        {
+                            Id = new Guid("20000000-0000-0000-0000-000000000002"),
+                            Code = "APPROVED",
+                            CreatedOn = new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Approved"
+                        },
+                        new
+                        {
+                            Id = new Guid("20000000-0000-0000-0000-000000000003"),
+                            Code = "REJECTED",
+                            CreatedOn = new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Rejected"
+                        },
+                        new
+                        {
+                            Id = new Guid("20000000-0000-0000-0000-000000000004"),
+                            Code = "CANCELLED",
+                            CreatedOn = new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Cancelled"
+                        });
+                });
+
+            modelBuilder.Entity("HRMS.Modules.Leave.Domain.Entities.LeaveType", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("DeletedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsPaid")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid?>("ModifiedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("ModifiedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CompanyId", "Code")
+                        .IsUnique()
+                        .HasFilter("[IsDeleted] = 0");
+
+                    b.HasIndex("CompanyId", "Name")
+                        .IsUnique()
+                        .HasFilter("[IsDeleted] = 0");
+
+                    b.ToTable("LeaveTypes", (string)null);
+                });
+
+            modelBuilder.Entity("HRMS.Modules.Leave.Domain.Entities.LeaveYear", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("DeletedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<DateOnly>("EndDate")
+                        .HasColumnType("date");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid?>("ModifiedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("ModifiedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateOnly>("StartDate")
+                        .HasColumnType("date");
+
+                    b.Property<Guid>("StatusId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("StatusId");
+
+                    b.HasIndex("CompanyId", "Code")
+                        .IsUnique()
+                        .HasFilter("[IsDeleted] = 0");
+
+                    b.HasIndex("CompanyId", "Name")
+                        .IsUnique()
+                        .HasFilter("[IsDeleted] = 0");
+
+                    b.HasIndex("CompanyId", "StatusId");
+
+                    b.ToTable("LeaveYears", (string)null);
+                });
+
+            modelBuilder.Entity("HRMS.Modules.Leave.Domain.Entities.LeaveYearStatus", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("DeletedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid?>("ModifiedBy")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset?>("ModifiedOn")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Code")
+                        .IsUnique();
+
+                    b.ToTable("LeaveYearStatuses", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("10000000-0000-0000-0000-000000000001"),
+                            Code = "DRAFT",
+                            CreatedOn = new DateTimeOffset(new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Draft"
+                        },
+                        new
+                        {
+                            Id = new Guid("10000000-0000-0000-0000-000000000002"),
+                            Code = "ACTIVE",
+                            CreatedOn = new DateTimeOffset(new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Active"
+                        },
+                        new
+                        {
+                            Id = new Guid("10000000-0000-0000-0000-000000000003"),
+                            Code = "CLOSED",
+                            CreatedOn = new DateTimeOffset(new DateTime(2026, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Closed"
+                        });
+                });
+
+            modelBuilder.Entity("HRMS.Modules.Identity.Domain.Entities.RolePermission", b =>
+                {
+                    b.HasOne("HRMS.Modules.Identity.Domain.Entities.Permission", "Permission")
+                        .WithMany("RolePermissions")
+                        .HasForeignKey("PermissionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("HRMS.Modules.Identity.Domain.Entities.Role", "Role")
+                        .WithMany("RolePermissions")
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Permission");
+
+                    b.Navigation("Role");
+                });
+
+            modelBuilder.Entity("HRMS.Modules.Identity.Domain.Entities.UserRole", b =>
+                {
+                    b.HasOne("HRMS.Modules.Identity.Domain.Entities.Role", "Role")
+                        .WithMany("UserRoles")
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("HRMS.Modules.Identity.Domain.Entities.User", "User")
+                        .WithMany("UserRoles")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Role");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("HRMS.Modules.Leave.Domain.Entities.CompanyHoliday", b =>
+                {
+                    b.HasOne("HRMS.Modules.Leave.Domain.Entities.LeaveYear", "LeaveYear")
+                        .WithMany()
+                        .HasForeignKey("LeaveYearId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("LeaveYear");
+                });
+
+            modelBuilder.Entity("HRMS.Modules.Leave.Domain.Entities.EmployeeLeaveEntitlement", b =>
+                {
+                    b.HasOne("HRMS.Modules.Leave.Domain.Entities.LeavePolicyRule", null)
+                        .WithMany()
+                        .HasForeignKey("LeavePolicyRuleId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("HRMS.Modules.Leave.Domain.Entities.LeaveType", null)
+                        .WithMany()
+                        .HasForeignKey("LeaveTypeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("HRMS.Modules.Leave.Domain.Entities.LeaveYear", null)
+                        .WithMany()
+                        .HasForeignKey("LeaveYearId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("HRMS.Modules.Leave.Domain.Entities.LeavePolicyRule", b =>
+                {
+                    b.HasOne("HRMS.Modules.Leave.Domain.Entities.LeavePolicy", null)
+                        .WithMany()
+                        .HasForeignKey("LeavePolicyId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("HRMS.Modules.Leave.Domain.Entities.LeaveType", null)
+                        .WithMany()
+                        .HasForeignKey("LeaveTypeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("HRMS.Modules.Leave.Domain.Entities.LeaveRequest", b =>
+                {
+                    b.HasOne("HRMS.Modules.Employee.Domain.Entities.Employee", null)
+                        .WithMany()
+                        .HasForeignKey("EmployeeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("HRMS.Modules.Leave.Domain.Entities.LeaveDayPart", null)
+                        .WithMany()
+                        .HasForeignKey("EndDayPartId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("HRMS.Modules.Leave.Domain.Entities.LeaveType", null)
+                        .WithMany()
+                        .HasForeignKey("LeaveTypeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("HRMS.Modules.Leave.Domain.Entities.LeaveYear", null)
+                        .WithMany()
+                        .HasForeignKey("LeaveYearId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("HRMS.Modules.Leave.Domain.Entities.LeaveDayPart", null)
+                        .WithMany()
+                        .HasForeignKey("StartDayPartId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("HRMS.Modules.Leave.Domain.Entities.LeaveRequestStatus", null)
+                        .WithMany()
+                        .HasForeignKey("StatusId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("HRMS.Modules.Leave.Domain.Entities.LeaveYear", b =>
+                {
+                    b.HasOne("HRMS.Modules.Leave.Domain.Entities.LeaveYearStatus", null)
+                        .WithMany()
+                        .HasForeignKey("StatusId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("HRMS.Modules.Identity.Domain.Entities.Permission", b =>
+                {
+                    b.Navigation("RolePermissions");
+                });
+
+            modelBuilder.Entity("HRMS.Modules.Identity.Domain.Entities.Role", b =>
+                {
+                    b.Navigation("RolePermissions");
+
+                    b.Navigation("UserRoles");
+                });
+
+            modelBuilder.Entity("HRMS.Modules.Identity.Domain.Entities.User", b =>
+                {
+                    b.Navigation("UserRoles");
+                });
+#pragma warning restore 612, 618
+        }
+    }
+}
+
+
+============================================================
+FILE: D:\Project\vsProject\HRMS\src\HRMS.Persistence\Transactions\LeaveBalanceTransaction.cs
+============================================================
+using HRMS.BuildingBlocks.Application.Abstractions.Persistence;
+using HRMS.BuildingBlocks.Application.Exceptions;
+using HRMS.Modules.Leave.Application.Abstractions.Persistence;
+using HRMS.Persistence.Context;
+using Microsoft.EntityFrameworkCore;
+
+namespace HRMS.Persistence.Transactions;
+
+public sealed class LeaveBalanceTransaction : ILeaveBalanceTransaction
+{
+    private readonly ApplicationDbContext _context;
+    private readonly IUnitOfWorkTransaction _transaction;
+
+    public LeaveBalanceTransaction(
+        ApplicationDbContext context,
+        IUnitOfWorkTransaction transaction)
+    {
+        _context = context;
+        _transaction = transaction;
+    }
+
+    public async Task ApproveLeaveAsync(
+        Guid leaveRequestId,
+        decimal days,
+        Guid approvedStatusId,
+        DateTimeOffset approvedOn,
+        string? approvalReason,
+        CancellationToken cancellationToken = default)
+    {
+        var leaveRequest = await _context.LeaveRequests
+            .FirstOrDefaultAsync(
+                x =>
+                    x.Id == leaveRequestId &&
+                    !x.IsDeleted,
+                cancellationToken);
+
+        if (leaveRequest is null)
+        {
+            throw new NotFoundException(
+                "Leave Request",
+                leaveRequestId);
+        }
+
+        var entitlement = await GetEntitlementAsync(
+            leaveRequest,
+            cancellationToken);
+
+        var availableDays =
+            entitlement.EntitledDays - entitlement.UsedDays;
+
+        if (availableDays < days)
+        {
+            throw new ConflictException(
+                $"Insufficient leave balance. " +
+                $"Requested: {days:0.##} days, " +
+                $"Available: {availableDays:0.##} days.");
+        }
+
+        await _transaction.BeginAsync(cancellationToken);
+
+        try
+        {
+            entitlement.UsedDays += days;
+
+            leaveRequest.StatusId = approvedStatusId;
+            leaveRequest.ApprovedOn = approvedOn;
+            leaveRequest.ApprovalReason = approvalReason;
+
+            await _context.SaveChangesAsync(cancellationToken);
+
+            await _transaction.CommitAsync(cancellationToken);
+        }
+        catch
+        {
+            await _transaction.RollbackAsync(cancellationToken);
+            throw;
+        }
+    }
+
+    public async Task CancelLeaveAsync(
+        Guid leaveRequestId,
+        decimal days,
+        Guid cancelledStatusId,
+        DateTimeOffset cancelledOn,
+        string cancellationReason,
+        CancellationToken cancellationToken = default)
+    {
+        var leaveRequest = await _context.LeaveRequests
+            .FirstOrDefaultAsync(
+                x =>
+                    x.Id == leaveRequestId &&
+                    !x.IsDeleted,
+                cancellationToken);
+
+        if (leaveRequest is null)
+        {
+            throw new NotFoundException(
+                "Leave Request",
+                leaveRequestId);
+        }
+
+        var entitlement = await GetEntitlementAsync(
+            leaveRequest,
+            cancellationToken);
+
+        if (entitlement.UsedDays < days)
+        {
+            throw new ConflictException(
+                "Leave balance cannot be restored because the used balance is insufficient.");
+        }
+
+        await _transaction.BeginAsync(cancellationToken);
+
+        try
+        {
+            entitlement.UsedDays -= days;
+
+            leaveRequest.StatusId = cancelledStatusId;
+            leaveRequest.CancelledOn = cancelledOn;
+            leaveRequest.CancellationReason = cancellationReason;
+
+            await _context.SaveChangesAsync(cancellationToken);
+
+            await _transaction.CommitAsync(cancellationToken);
+        }
+        catch
+        {
+            await _transaction.RollbackAsync(cancellationToken);
+            throw;
+        }
+    }
+
+    private async Task<HRMS.Modules.Leave.Domain.Entities.EmployeeLeaveEntitlement>
+        GetEntitlementAsync(
+            HRMS.Modules.Leave.Domain.Entities.LeaveRequest leaveRequest,
+            CancellationToken cancellationToken)
+    {
+        var entitlement =
+            await _context.EmployeeLeaveEntitlements
+                .FirstOrDefaultAsync(
+                    x =>
+                        x.EmployeeId == leaveRequest.EmployeeId &&
+                        x.LeaveYearId == leaveRequest.LeaveYearId &&
+                        x.LeaveTypeId == leaveRequest.LeaveTypeId &&
+                        !x.IsDeleted,
+                    cancellationToken);
+
+        if (entitlement is null)
+        {
+            throw new NotFoundException(
+                "Employee Leave Entitlement",
+                leaveRequest.EmployeeId);
+        }
+
+        return entitlement;
+    }
+}
+
+
+============================================================
+FILE: D:\Project\vsProject\HRMS\src\HRMS.Persistence\Transactions\UnitOfWorkTransaction.cs
+============================================================
+using HRMS.BuildingBlocks.Application.Abstractions.Persistence;
+using HRMS.Persistence.Context;
+using Microsoft.EntityFrameworkCore.Storage;
+
+namespace HRMS.Persistence.Transactions;
+
+public sealed class UnitOfWorkTransaction : IUnitOfWorkTransaction
+{
+    private readonly ApplicationDbContext _context;
+
+    private IDbContextTransaction? _transaction;
+
+    public UnitOfWorkTransaction(ApplicationDbContext context)
+    {
+        _context = context;
+    }
+
+    public async Task BeginAsync(
+        CancellationToken cancellationToken = default)
+    {
+        if (_transaction is not null)
+        {
+            return;
+        }
+
+        _transaction = await _context.Database.BeginTransactionAsync(
+            cancellationToken);
+    }
+
+    public async Task CommitAsync(
+        CancellationToken cancellationToken = default)
+    {
+        if (_transaction is null)
+        {
+            return;
+        }
+
+        await _context.SaveChangesAsync(cancellationToken);
+
+        await _transaction.CommitAsync(cancellationToken);
+
+        await _transaction.DisposeAsync();
+
+        _transaction = null;
+    }
+
+    public async Task RollbackAsync(
+        CancellationToken cancellationToken = default)
+    {
+        if (_transaction is null)
+        {
+            return;
+        }
+
+        await _transaction.RollbackAsync(cancellationToken);
+
+        await _transaction.DisposeAsync();
+
+        _transaction = null;
+    }
+}
+
+
+============================================================
+FILE: D:\Project\vsProject\HRMS\src\Modules\Leave\Application\Abstractions\Persistence\ILeaveBalanceTransaction.cs
+============================================================
+namespace HRMS.Modules.Leave.Application.Abstractions.Persistence;
+
+public interface ILeaveBalanceTransaction
+{
+    Task ApproveLeaveAsync(
+        Guid leaveRequestId,
+        decimal days,
+        Guid approvedStatusId,
+        DateTimeOffset approvedOn,
+        string? approvalReason,
+        CancellationToken cancellationToken = default);
+
+    Task CancelLeaveAsync(
+        Guid leaveRequestId,
+        decimal days,
+        Guid cancelledStatusId,
+        DateTimeOffset cancelledOn,
+        string cancellationReason,
+        CancellationToken cancellationToken = default);
+}
+
+
+============================================================
+FILE: D:\Project\vsProject\HRMS\src\Modules\Leave\Application\Features\EmployeeLeaveEntitlements\BusinessRules\EmployeeLeaveEntitlementBusinessRules.cs
+============================================================
+using HRMS.BuildingBlocks.Application.Abstractions.Persistence;
+using HRMS.BuildingBlocks.Application.Exceptions;
+using HRMS.Modules.Leave.Domain.Entities;
+
+namespace HRMS.Modules.Leave.Application.Features.EmployeeLeaveEntitlements.BusinessRules;
+
+public class EmployeeLeaveEntitlementBusinessRules
+{
+    private readonly IReadRepository<EmployeeLeaveEntitlement, Guid>
+        _entitlementRepository;
+
+    private readonly IReadRepository<LeaveYear, Guid>
+        _leaveYearRepository;
+
+    private readonly IReadRepository<LeaveType, Guid>
+        _leaveTypeRepository;
+
+    private readonly IReadRepository<LeavePolicyRule, Guid>
+        _leavePolicyRuleRepository;
+
+    public EmployeeLeaveEntitlementBusinessRules(
+        IReadRepository<EmployeeLeaveEntitlement, Guid> entitlementRepository,
+        IReadRepository<LeaveYear, Guid> leaveYearRepository,
+        IReadRepository<LeaveType, Guid> leaveTypeRepository,
+        IReadRepository<LeavePolicyRule, Guid> leavePolicyRuleRepository)
+    {
+        _entitlementRepository = entitlementRepository;
+        _leaveYearRepository = leaveYearRepository;
+        _leaveTypeRepository = leaveTypeRepository;
+        _leavePolicyRuleRepository = leavePolicyRuleRepository;
+    }
+
+    public async Task EnsureEntitlementExistsAsync(
+        Guid entitlementId,
+        CancellationToken cancellationToken = default)
+    {
+        var entitlement = await _entitlementRepository.GetByIdAsync(
+            entitlementId,
+            cancellationToken);
+
+        if (entitlement is null)
+        {
+            throw new NotFoundException(
+                "Employee Leave Entitlement",
+                entitlementId);
+        }
+    }
+
+    public async Task EnsurePolicyRuleMatchesLeaveTypeAsync(
+    Guid leavePolicyRuleId,
+    Guid leaveTypeId,
+    CancellationToken cancellationToken = default)
+    {
+        var rule = await _leavePolicyRuleRepository.GetByIdAsync(
+            leavePolicyRuleId,
+            cancellationToken);
+
+        if (rule is null)
+        {
+            throw new NotFoundException(
+                "Leave Policy Rule",
+                leavePolicyRuleId);
+        }
+
+        if (rule.LeaveTypeId != leaveTypeId)
+        {
+            throw new ConflictException(
+                "The leave policy rule does not belong to the selected leave type.");
+        }
+    }
+    public async Task EnsureLeaveYearExistsAsync(
+        Guid leaveYearId,
+        CancellationToken cancellationToken = default)
+    {
+        var leaveYear = await _leaveYearRepository.GetByIdAsync(
+            leaveYearId,
+            cancellationToken);
+
+        if (leaveYear is null)
+        {
+            throw new NotFoundException(
+                "Leave Year",
+                leaveYearId);
+        }
+    }
+
+    public async Task EnsureLeaveTypeExistsAsync(
+        Guid leaveTypeId,
+        CancellationToken cancellationToken = default)
+    {
+        var leaveType = await _leaveTypeRepository.GetByIdAsync(
+            leaveTypeId,
+            cancellationToken);
+
+        if (leaveType is null)
+        {
+            throw new NotFoundException(
+                "Leave Type",
+                leaveTypeId);
+        }
+    }
+
+    public async Task EnsurePolicyRuleExistsAsync(
+        Guid leavePolicyRuleId,
+        CancellationToken cancellationToken = default)
+    {
+        var rule = await _leavePolicyRuleRepository.GetByIdAsync(
+            leavePolicyRuleId,
+            cancellationToken);
+
+        if (rule is null)
+        {
+            throw new NotFoundException(
+                "Leave Policy Rule",
+                leavePolicyRuleId);
+        }
+    }
+
+    public async Task EnsureUniqueEmployeeLeaveEntitlementAsync(
+        Guid employeeId,
+        Guid leaveYearId,
+        Guid leaveTypeId,
+        CancellationToken cancellationToken = default)
+    {
+        var exists = await _entitlementRepository.AnyAsync(
+            x =>
+                x.EmployeeId == employeeId &&
+                x.LeaveYearId == leaveYearId &&
+                x.LeaveTypeId == leaveTypeId &&
+                !x.IsDeleted,
+            cancellationToken);
+
+        if (exists)
+        {
+            throw new ConflictException(
+                "Leave entitlement already exists for this employee, leave year and leave type.");
+        }
+    }
+
+    public async Task EnsureUniqueEmployeeLeaveEntitlementAsync(
+        Guid employeeId,
+        Guid leaveYearId,
+        Guid leaveTypeId,
+        Guid entitlementId,
+        CancellationToken cancellationToken = default)
+    {
+        var exists = await _entitlementRepository.AnyAsync(
+            x =>
+                x.EmployeeId == employeeId &&
+                x.LeaveYearId == leaveYearId &&
+                x.LeaveTypeId == leaveTypeId &&
+                x.Id != entitlementId &&
+                !x.IsDeleted,
+            cancellationToken);
+
+        if (exists)
+        {
+            throw new ConflictException(
+                "Leave entitlement already exists for this employee, leave year and leave type.");
+        }
+    }
+
+    public void EnsureEntitledDaysAreValid(
+        decimal entitledDays)
+    {
+        if (entitledDays < 0)
+        {
+            throw new ConflictException(
+                "Entitled days cannot be negative.");
+        }
+    }
+}
+
+============================================================
+FILE: D:\Project\vsProject\HRMS\src\Modules\Leave\Application\Features\EmployeeLeaveEntitlements\Commands\CreateEmployeeLeaveEntitlement\CreateEmployeeLeaveEntitlementCommand.cs
+============================================================
+using MediatR;
+
+namespace HRMS.Modules.Leave.Application.Features.EmployeeLeaveEntitlements.Commands.CreateEmployeeLeaveEntitlement;
+
+public record CreateEmployeeLeaveEntitlementCommand : IRequest<Guid>
+{
+    public Guid EmployeeId { get; init; }
+
+    public Guid LeaveYearId { get; init; }
+
+    public Guid LeaveTypeId { get; init; }
+
+    public Guid LeavePolicyRuleId { get; init; }
+
+    public decimal EntitledDays { get; init; }
+}
+
+============================================================
+FILE: D:\Project\vsProject\HRMS\src\Modules\Leave\Application\Features\EmployeeLeaveEntitlements\Commands\CreateEmployeeLeaveEntitlement\CreateEmployeeLeaveEntitlementCommandHandler.cs
+============================================================
+using HRMS.BuildingBlocks.Application.Abstractions.Persistence;
+using HRMS.Modules.Leave.Application.Features.EmployeeLeaveEntitlements.BusinessRules;
+using HRMS.Modules.Leave.Domain.Entities;
+using MediatR;
+
+namespace HRMS.Modules.Leave.Application.Features.EmployeeLeaveEntitlements.Commands.CreateEmployeeLeaveEntitlement;
+
+public class CreateEmployeeLeaveEntitlementCommandHandler
+    : IRequestHandler<CreateEmployeeLeaveEntitlementCommand, Guid>
+{
+    private readonly IWriteRepository<EmployeeLeaveEntitlement, Guid>
+        _writeRepository;
+
+    private readonly EmployeeLeaveEntitlementBusinessRules
+        _businessRules;
+
+    public CreateEmployeeLeaveEntitlementCommandHandler(
+        IWriteRepository<EmployeeLeaveEntitlement, Guid> writeRepository,
+        EmployeeLeaveEntitlementBusinessRules businessRules)
+    {
+        _writeRepository = writeRepository;
+        _businessRules = businessRules;
+    }
+
+    public async Task<Guid> Handle(
+        CreateEmployeeLeaveEntitlementCommand request,
+        CancellationToken cancellationToken)
+    {
+        await _businessRules.EnsureLeaveYearExistsAsync(
+            request.LeaveYearId,
+            cancellationToken);
+
+        await _businessRules.EnsureLeaveTypeExistsAsync(
+            request.LeaveTypeId,
+            cancellationToken);
+
+        await _businessRules.EnsurePolicyRuleExistsAsync(
+            request.LeavePolicyRuleId,
+            cancellationToken);
+
+        await _businessRules.EnsureUniqueEmployeeLeaveEntitlementAsync(
+            request.EmployeeId,
+            request.LeaveYearId,
+            request.LeaveTypeId,
+            cancellationToken);
+
+        await _businessRules.EnsurePolicyRuleMatchesLeaveTypeAsync(
+    request.LeavePolicyRuleId,
+    request.LeaveTypeId,
+    cancellationToken);
+
+        _businessRules.EnsureEntitledDaysAreValid(
+            request.EntitledDays);
+
+        var entity = new EmployeeLeaveEntitlement
+        {
+            EmployeeId = request.EmployeeId,
+            LeaveYearId = request.LeaveYearId,
+            LeaveTypeId = request.LeaveTypeId,
+            LeavePolicyRuleId = request.LeavePolicyRuleId,
+            EntitledDays = request.EntitledDays
+        };
+
+        await _writeRepository.AddAsync(
+            entity,
+            cancellationToken);
+
+        return entity.Id;
+    }
+}
+
+============================================================
+FILE: D:\Project\vsProject\HRMS\src\Modules\Leave\Application\Features\EmployeeLeaveEntitlements\Commands\CreateEmployeeLeaveEntitlement\CreateEmployeeLeaveEntitlementCommandValidator.cs
+============================================================
+using FluentValidation;
+
+namespace HRMS.Modules.Leave.Application.Features.EmployeeLeaveEntitlements.Commands.CreateEmployeeLeaveEntitlement;
+
+public class CreateEmployeeLeaveEntitlementCommandValidator
+    : AbstractValidator<CreateEmployeeLeaveEntitlementCommand>
+{
+    public CreateEmployeeLeaveEntitlementCommandValidator()
+    {
+        RuleFor(x => x.EmployeeId)
+            .NotEmpty();
+
+        RuleFor(x => x.LeaveYearId)
+            .NotEmpty();
+
+        RuleFor(x => x.LeaveTypeId)
+            .NotEmpty();
+
+        RuleFor(x => x.LeavePolicyRuleId)
+            .NotEmpty();
+
+        RuleFor(x => x.EntitledDays)
+            .GreaterThanOrEqualTo(0);
+    }
+}
+
+============================================================
+FILE: D:\Project\vsProject\HRMS\src\Modules\Leave\Application\Features\EmployeeLeaveEntitlements\Commands\DeleteEmployeeLeaveEntitlement\DeleteEmployeeLeaveEntitlementCommand.cs
+============================================================
+using MediatR;
+
+namespace HRMS.Modules.Leave.Application.Features.EmployeeLeaveEntitlements.Commands.DeleteEmployeeLeaveEntitlement;
+
+public record DeleteEmployeeLeaveEntitlementCommand(
+    Guid Id) : IRequest;
+
+
+============================================================
+FILE: D:\Project\vsProject\HRMS\src\Modules\Leave\Application\Features\EmployeeLeaveEntitlements\Commands\DeleteEmployeeLeaveEntitlement\DeleteEmployeeLeaveEntitlementCommandHandler.cs
+============================================================
+using HRMS.BuildingBlocks.Application.Abstractions.Persistence;
+using HRMS.Modules.Leave.Application.Features.EmployeeLeaveEntitlements.BusinessRules;
+using HRMS.Modules.Leave.Domain.Entities;
+using MediatR;
+
+namespace HRMS.Modules.Leave.Application.Features.EmployeeLeaveEntitlements.Commands.DeleteEmployeeLeaveEntitlement;
+
+public class DeleteEmployeeLeaveEntitlementCommandHandler
+    : IRequestHandler<DeleteEmployeeLeaveEntitlementCommand>
+{
+    private readonly IReadRepository<EmployeeLeaveEntitlement, Guid> _readRepository;
+    private readonly IWriteRepository<EmployeeLeaveEntitlement, Guid> _writeRepository;
+    private readonly EmployeeLeaveEntitlementBusinessRules _businessRules;
+
+    public DeleteEmployeeLeaveEntitlementCommandHandler(
+        IReadRepository<EmployeeLeaveEntitlement, Guid> readRepository,
+        IWriteRepository<EmployeeLeaveEntitlement, Guid> writeRepository,
+        EmployeeLeaveEntitlementBusinessRules businessRules)
+    {
+        _readRepository = readRepository;
+        _writeRepository = writeRepository;
+        _businessRules = businessRules;
+    }
+
+    public async Task Handle(
+        DeleteEmployeeLeaveEntitlementCommand request,
+        CancellationToken cancellationToken)
+    {
+        var entity = await _readRepository.GetByIdAsync(
+            request.Id,
+            cancellationToken);
+
+        if (entity is null)
+        {
+            await _businessRules.EnsureEntitlementExistsAsync(
+                request.Id,
+                cancellationToken);
+
+            return;
+        }
+
+        await _writeRepository.DeleteAsync(
+            entity,
+            cancellationToken);
+    }
+}
+
+
+============================================================
+FILE: D:\Project\vsProject\HRMS\src\Modules\Leave\Application\Features\EmployeeLeaveEntitlements\Commands\DeleteEmployeeLeaveEntitlement\DeleteEmployeeLeaveEntitlementCommandValidator.cs
+============================================================
+using FluentValidation;
+
+namespace HRMS.Modules.Leave.Application.Features.EmployeeLeaveEntitlements.Commands.DeleteEmployeeLeaveEntitlement;
+
+public class DeleteEmployeeLeaveEntitlementCommandValidator
+    : AbstractValidator<DeleteEmployeeLeaveEntitlementCommand>
+{
+    public DeleteEmployeeLeaveEntitlementCommandValidator()
+    {
+        RuleFor(x => x.Id)
+            .NotEmpty();
+    }
+}
+
+
+============================================================
+FILE: D:\Project\vsProject\HRMS\src\Modules\Leave\Application\Features\EmployeeLeaveEntitlements\Commands\UpdateEmployeeLeaveEntitlement\UpdateEmployeeLeaveEntitlementCommand.cs
+============================================================
+using MediatR;
+
+namespace HRMS.Modules.Leave.Application.Features.EmployeeLeaveEntitlements.Commands.UpdateEmployeeLeaveEntitlement;
+
+public record UpdateEmployeeLeaveEntitlementCommand : IRequest
+{
+    public Guid Id { get; init; }
+
+    public Guid EmployeeId { get; init; }
+
+    public Guid LeaveYearId { get; init; }
+
+    public Guid LeaveTypeId { get; init; }
+
+    public Guid LeavePolicyRuleId { get; init; }
+
+    public decimal EntitledDays { get; init; }
+}
+
+
+============================================================
+FILE: D:\Project\vsProject\HRMS\src\Modules\Leave\Application\Features\EmployeeLeaveEntitlements\Commands\UpdateEmployeeLeaveEntitlement\UpdateEmployeeLeaveEntitlementCommandHandler.cs
+============================================================
+using HRMS.BuildingBlocks.Application.Abstractions.Persistence;
+using HRMS.Modules.Leave.Application.Features.EmployeeLeaveEntitlements.BusinessRules;
+using HRMS.Modules.Leave.Domain.Entities;
+using MediatR;
+
+namespace HRMS.Modules.Leave.Application.Features.EmployeeLeaveEntitlements.Commands.UpdateEmployeeLeaveEntitlement;
+
+public class UpdateEmployeeLeaveEntitlementCommandHandler
+    : IRequestHandler<UpdateEmployeeLeaveEntitlementCommand>
+{
+    private readonly IReadRepository<EmployeeLeaveEntitlement, Guid> _readRepository;
+    private readonly IWriteRepository<EmployeeLeaveEntitlement, Guid> _writeRepository;
+    private readonly EmployeeLeaveEntitlementBusinessRules _businessRules;
+
+    public UpdateEmployeeLeaveEntitlementCommandHandler(
+        IReadRepository<EmployeeLeaveEntitlement, Guid> readRepository,
+        IWriteRepository<EmployeeLeaveEntitlement, Guid> writeRepository,
+        EmployeeLeaveEntitlementBusinessRules businessRules)
+    {
+        _readRepository = readRepository;
+        _writeRepository = writeRepository;
+        _businessRules = businessRules;
+    }
+
+    public async Task Handle(
+        UpdateEmployeeLeaveEntitlementCommand request,
+        CancellationToken cancellationToken)
+    {
+        var entity = await _readRepository.GetByIdAsync(
+            request.Id,
+            cancellationToken);
+
+        if (entity is null)
+        {
+            await _businessRules.EnsureEntitlementExistsAsync(
+                request.Id,
+                cancellationToken);
+
+            return;
+        }
+
+        await _businessRules.EnsureLeaveYearExistsAsync(
+            request.LeaveYearId,
+            cancellationToken);
+
+        await _businessRules.EnsureLeaveTypeExistsAsync(
+            request.LeaveTypeId,
+            cancellationToken);
+
+        await _businessRules.EnsurePolicyRuleExistsAsync(
+            request.LeavePolicyRuleId,
+            cancellationToken);
+
+        await _businessRules.EnsurePolicyRuleMatchesLeaveTypeAsync(
+            request.LeavePolicyRuleId,
+            request.LeaveTypeId,
+            cancellationToken);
+
+        await _businessRules.EnsureUniqueEmployeeLeaveEntitlementAsync(
+            request.EmployeeId,
+            request.LeaveYearId,
+            request.LeaveTypeId,
+            request.Id,
+            cancellationToken);
+
+        _businessRules.EnsureEntitledDaysAreValid(
+            request.EntitledDays);
+
+        entity.EmployeeId = request.EmployeeId;
+        entity.LeaveYearId = request.LeaveYearId;
+        entity.LeaveTypeId = request.LeaveTypeId;
+        entity.LeavePolicyRuleId = request.LeavePolicyRuleId;
+        entity.EntitledDays = request.EntitledDays;
+
+        await _writeRepository.UpdateAsync(
+            entity,
+            cancellationToken);
+    }
+}
+
+
+============================================================
+FILE: D:\Project\vsProject\HRMS\src\Modules\Leave\Application\Features\EmployeeLeaveEntitlements\Commands\UpdateEmployeeLeaveEntitlement\UpdateEmployeeLeaveEntitlementCommandValidator.cs
+============================================================
+using FluentValidation;
+
+namespace HRMS.Modules.Leave.Application.Features.EmployeeLeaveEntitlements.Commands.UpdateEmployeeLeaveEntitlement;
+
+public class UpdateEmployeeLeaveEntitlementCommandValidator
+    : AbstractValidator<UpdateEmployeeLeaveEntitlementCommand>
+{
+    public UpdateEmployeeLeaveEntitlementCommandValidator()
+    {
+        RuleFor(x => x.Id)
+            .NotEmpty();
+
+        RuleFor(x => x.EmployeeId)
+            .NotEmpty();
+
+        RuleFor(x => x.LeaveYearId)
+            .NotEmpty();
+
+        RuleFor(x => x.LeaveTypeId)
+            .NotEmpty();
+
+        RuleFor(x => x.LeavePolicyRuleId)
+            .NotEmpty();
+
+        RuleFor(x => x.EntitledDays)
+            .GreaterThanOrEqualTo(0);
+    }
+}
+
+
+============================================================
+FILE: D:\Project\vsProject\HRMS\src\Modules\Leave\Application\Features\EmployeeLeaveEntitlements\DTOs\EmployeeLeaveEntitlementDto.cs
+============================================================
+namespace HRMS.Modules.Leave.Application.Features.EmployeeLeaveEntitlements.DTOs;
+
+public class EmployeeLeaveEntitlementDto
+{
+    public Guid Id { get; set; }
+
+    public Guid EmployeeId { get; set; }
+
+    public Guid LeaveYearId { get; set; }
+
+    public Guid LeaveTypeId { get; set; }
+
+    public Guid LeavePolicyRuleId { get; set; }
+
+    public decimal EntitledDays { get; set; }
+}
+
+============================================================
+FILE: D:\Project\vsProject\HRMS\src\Modules\Leave\Application\Features\EmployeeLeaveEntitlements\EmployeeLeaveEntitlementProfile.cs
+============================================================
+using AutoMapper;
+using HRMS.Modules.Leave.Application.Features.EmployeeLeaveEntitlements.DTOs;
+using HRMS.Modules.Leave.Domain.Entities;
+
+namespace HRMS.Modules.Leave.Application.Features.EmployeeLeaveEntitlements;
+
+public class EmployeeLeaveEntitlementProfile : Profile
+{
+    public EmployeeLeaveEntitlementProfile()
+    {
+        CreateMap<EmployeeLeaveEntitlement, EmployeeLeaveEntitlementDto>();
+    }
+}
+
+============================================================
+FILE: D:\Project\vsProject\HRMS\src\Modules\Leave\Application\Features\EmployeeLeaveEntitlements\Queries\GetEmployeeLeaveEntitlementById\GetEmployeeLeaveEntitlementByIdQuery.cs
+============================================================
+using MediatR;
+
+namespace HRMS.Modules.Leave.Application.Features.EmployeeLeaveEntitlements.Queries.GetEmployeeLeaveEntitlementById;
+
+public record GetEmployeeLeaveEntitlementByIdQuery(Guid Id)
+    : IRequest<EmployeeLeaveEntitlementDto>;
+
+public record EmployeeLeaveEntitlementDto
+{
+    public Guid Id { get; init; }
+    public Guid EmployeeId { get; init; }
+    public Guid LeaveYearId { get; init; }
+    public Guid LeaveTypeId { get; init; }
+    public Guid LeavePolicyRuleId { get; init; }
+    public decimal EntitledDays { get; init; }
+}
+
+
+============================================================
+FILE: D:\Project\vsProject\HRMS\src\Modules\Leave\Application\Features\EmployeeLeaveEntitlements\Queries\GetEmployeeLeaveEntitlementById\GetEmployeeLeaveEntitlementByIdQueryHandler.cs
+============================================================
+using HRMS.BuildingBlocks.Application.Abstractions.Persistence;
+using HRMS.BuildingBlocks.Application.Exceptions;
+using HRMS.Modules.Leave.Domain.Entities;
+using MediatR;
+
+namespace HRMS.Modules.Leave.Application.Features.EmployeeLeaveEntitlements.Queries.GetEmployeeLeaveEntitlementById;
+
+public class GetEmployeeLeaveEntitlementByIdQueryHandler
+    : IRequestHandler<GetEmployeeLeaveEntitlementByIdQuery, EmployeeLeaveEntitlementDto>
+{
+    private readonly IReadRepository<EmployeeLeaveEntitlement, Guid> _repository;
+
+    public GetEmployeeLeaveEntitlementByIdQueryHandler(
+        IReadRepository<EmployeeLeaveEntitlement, Guid> repository)
+    {
+        _repository = repository;
+    }
+
+    public async Task<EmployeeLeaveEntitlementDto> Handle(
+        GetEmployeeLeaveEntitlementByIdQuery request,
+        CancellationToken cancellationToken)
+    {
+        var entity = await _repository.GetByIdAsync(
+            request.Id,
+            cancellationToken);
+
+        if (entity is null || entity.IsDeleted)
+        {
+            throw new NotFoundException(
+                "Employee Leave Entitlement",
+                request.Id);
+        }
+
+        return new EmployeeLeaveEntitlementDto
+        {
+            Id = entity.Id,
+            EmployeeId = entity.EmployeeId,
+            LeaveYearId = entity.LeaveYearId,
+            LeaveTypeId = entity.LeaveTypeId,
+            LeavePolicyRuleId = entity.LeavePolicyRuleId,
+            EntitledDays = entity.EntitledDays
+        };
+    }
+}
+
+
+============================================================
+FILE: D:\Project\vsProject\HRMS\src\Modules\Leave\Application\Features\EmployeeLeaveEntitlements\Queries\GetEmployeeLeaveEntitlements\GetEmployeeLeaveEntitlementsQuery.cs
+============================================================
+using HRMS.BuildingBlocks.Application.Pagination;
+using MediatR;
+
+namespace HRMS.Modules.Leave.Application.Features.EmployeeLeaveEntitlements.Queries.GetEmployeeLeaveEntitlements;
+
+public record GetEmployeeLeaveEntitlementsQuery(
+    PagedRequest Request) : IRequest<PagedResult<EmployeeLeaveEntitlementListDto>>;
+
+public record EmployeeLeaveEntitlementListDto
+{
+    public Guid Id { get; init; }
+    public Guid EmployeeId { get; init; }
+    public Guid LeaveYearId { get; init; }
+    public Guid LeaveTypeId { get; init; }
+    public Guid LeavePolicyRuleId { get; init; }
+    public decimal EntitledDays { get; init; }
+}
+
+
+============================================================
+FILE: D:\Project\vsProject\HRMS\src\Modules\Leave\Application\Features\EmployeeLeaveEntitlements\Queries\GetEmployeeLeaveEntitlements\GetEmployeeLeaveEntitlementsQueryHandler.cs
+============================================================
+using HRMS.BuildingBlocks.Application.Abstractions.Persistence;
+using HRMS.BuildingBlocks.Application.Pagination;
+using HRMS.Modules.Leave.Domain.Entities;
+using MediatR;
+
+namespace HRMS.Modules.Leave.Application.Features.EmployeeLeaveEntitlements.Queries.GetEmployeeLeaveEntitlements;
+
+public class GetEmployeeLeaveEntitlementsQueryHandler
+    : IRequestHandler<
+        GetEmployeeLeaveEntitlementsQuery,
+        PagedResult<EmployeeLeaveEntitlementListDto>>
+{
+    private readonly IReadRepository<EmployeeLeaveEntitlement, Guid> _repository;
+
+    public GetEmployeeLeaveEntitlementsQueryHandler(
+        IReadRepository<EmployeeLeaveEntitlement, Guid> repository)
+    {
+        _repository = repository;
+    }
+
+    public async Task<PagedResult<EmployeeLeaveEntitlementListDto>> Handle(
+        GetEmployeeLeaveEntitlementsQuery request,
+        CancellationToken cancellationToken)
+    {
+        var result = await _repository.GetPagedAsync(
+            request.Request,
+            cancellationToken: cancellationToken);
+
+        return new PagedResult<EmployeeLeaveEntitlementListDto>
+        {
+            Items = result.Items
+                .Select(x => new EmployeeLeaveEntitlementListDto
+                {
+                    Id = x.Id,
+                    EmployeeId = x.EmployeeId,
+                    LeaveYearId = x.LeaveYearId,
+                    LeaveTypeId = x.LeaveTypeId,
+                    LeavePolicyRuleId = x.LeavePolicyRuleId,
+                    EntitledDays = x.EntitledDays
+                })
+                .ToList(),
+
+            TotalRecords = result.TotalRecords,
+            PageNumber = result.PageNumber,
+            PageSize = result.PageSize
+        };
+    }
+}
+
+
+============================================================
+FILE: D:\Project\vsProject\HRMS\src\Modules\Leave\Application\Features\EmployeeLeaveEntitlements\Queries\GetEmployeeLeaveEntitlements\GetEmployeeLeaveEntitlementsQueryValidator.cs
+============================================================
+using FluentValidation;
+
+namespace HRMS.Modules.Leave.Application.Features.EmployeeLeaveEntitlements.Queries.GetEmployeeLeaveEntitlements;
+
+public class GetEmployeeLeaveEntitlementsQueryValidator
+    : AbstractValidator<GetEmployeeLeaveEntitlementsQuery>
+{
+    private static readonly string[] AllowedSortFields =
+    [
+        "EntitledDays"
+    ];
+
+    public GetEmployeeLeaveEntitlementsQueryValidator()
+    {
+        RuleFor(x => x.Request.PageNumber)
+            .GreaterThanOrEqualTo(1);
+
+        RuleFor(x => x.Request.PageSize)
+            .InclusiveBetween(1, 100);
+
+        RuleFor(x => x.Request.SortBy)
+            .Must(sortBy =>
+                string.IsNullOrWhiteSpace(sortBy) ||
+                AllowedSortFields.Contains(
+                    sortBy,
+                    StringComparer.OrdinalIgnoreCase))
+            .WithMessage(
+                $"SortBy must be one of: {string.Join(", ", AllowedSortFields)}.");
+    }
+}
+
+
+============================================================
+FILE: D:\Project\vsProject\HRMS\src\Modules\Leave\Domain\Entities\EmployeeLeaveEntitlement.cs
+============================================================
+using HRMS.BuildingBlocks.Domain.Entities;
+
+namespace HRMS.Modules.Leave.Domain.Entities;
+
+public class EmployeeLeaveEntitlement : AuditableEntity<Guid>
+{
+    public Guid EmployeeId { get; set; }
+
+    public Guid LeaveYearId { get; set; }
+
+    public Guid LeaveTypeId { get; set; }
+
+    public Guid LeavePolicyRuleId { get; set; }
+
+    public decimal EntitledDays { get; set; }
+
+    public decimal CarryForwardDays { get; set; }
+
+    public decimal UsedDays { get; set; }
+}
+
+============================================================
+FILE: D:\Project\vsProject\HRMS\src\Modules\Leave\Infrastructure\Configurations\EmployeeLeaveEntitlementConfiguration.cs
+============================================================
+using HRMS.Modules.Leave.Domain.Entities;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+
+namespace HRMS.Modules.Leave.Infrastructure.Configurations;
+
+public class EmployeeLeaveEntitlementConfiguration
+    : IEntityTypeConfiguration<EmployeeLeaveEntitlement>
+{
+    public void Configure(EntityTypeBuilder<EmployeeLeaveEntitlement> builder)
+    {
+        builder.ToTable("EmployeeLeaveEntitlements");
+
+        builder.HasKey(x => x.Id);
+
+        builder.Property(x => x.EntitledDays)
+            .IsRequired()
+            .HasPrecision(18, 2);
+
+        builder.Property(x => x.CarryForwardDays)
+    .IsRequired()
+    .HasPrecision(18, 2)
+    .HasDefaultValue(0);
+
+        builder.Property(x => x.UsedDays)
+            .IsRequired()
+            .HasPrecision(18, 2)
+            .HasDefaultValue(0);
+
+        builder.HasIndex(x => new
+        {
+            x.EmployeeId,
+            x.LeaveYearId,
+            x.LeaveTypeId
+        })
+        .IsUnique()
+        .HasFilter("[IsDeleted] = 0");
+
+        builder.HasOne<LeaveYear>()
+            .WithMany()
+            .HasForeignKey(x => x.LeaveYearId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne<LeaveType>()
+            .WithMany()
+            .HasForeignKey(x => x.LeaveTypeId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasOne<LeavePolicyRule>()
+            .WithMany()
+            .HasForeignKey(x => x.LeavePolicyRuleId)
+            .OnDelete(DeleteBehavior.Restrict);
+    }
+}
+

@@ -1,0 +1,12 @@
+﻿src\Modules\Companies\Application\Class1.cs
+src\Modules\Companies\Application\DependencyInjection\DependencyInjection.cs
+src\Modules\Companies\Application\Features\Companies\BusinessRules\CompanyBusinessRules.cs
+src\Modules\Companies\Application\Features\Companies\Commands\CreateCompany\CreateCompanyCommand.cs
+src\Modules\Companies\Application\Features\Companies\Commands\CreateCompany\CreateCompanyCommandHandler.cs
+src\Modules\Companies\Application\Features\Companies\Commands\CreateCompany\CreateCompanyCommandValidator.cs
+src\Modules\Companies\Application\Features\Companies\DTOs\CreateCompanyDto.cs
+src\Modules\Companies\Application\Features\Companies\Mappings\CompanyProfile.cs
+src\Modules\Companies\Domain\Class1.cs
+src\Modules\Companies\Domain\Entities\Company.cs
+src\Modules\Companies\Infrastructure\Class1.cs
+src\Modules\Companies\Infrastructure\Configurations\CompanyConfiguration.cs
