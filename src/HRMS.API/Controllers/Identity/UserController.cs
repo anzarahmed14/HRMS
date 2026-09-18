@@ -1,4 +1,5 @@
-﻿using HRMS.Modules.Identity.Application.Features.Identity.Commands.ChangePassword;
+﻿using HRMS.Modules.Identity.Application.Authorization;
+using HRMS.Modules.Identity.Application.Features.Identity.Commands.ChangePassword;
 using HRMS.Modules.Identity.Application.Features.Identity.Commands.CreateUser;
 using HRMS.Modules.Identity.Application.Features.Identity.Commands.DeactivateUser;
 using HRMS.Modules.Identity.Application.Features.Identity.Commands.ResetPassword;
@@ -7,7 +8,6 @@ using HRMS.Modules.Identity.Application.Features.Identity.DTOs;
 using HRMS.Modules.Identity.Application.Features.Identity.Queries.GetUserById;
 using HRMS.Modules.Identity.Application.Features.Identity.Queries.GetUsers;
 using MediatR;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace HRMS.API.Controllers.Identity;
@@ -115,7 +115,7 @@ public class UserController : ControllerBase
         return NoContent();
     }
     [HttpPost("{id:guid}/reset-password")]
-    [Authorize(Policy = "User.ResetPassword")]
+    [PermissionAuthorize(PermissionNames.User.ResetPassword)]
     public async Task<IActionResult> ResetPassword(
     Guid id,
     [FromBody] ResetPasswordCommand command,

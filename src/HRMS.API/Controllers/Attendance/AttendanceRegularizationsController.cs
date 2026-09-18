@@ -11,14 +11,14 @@ using Microsoft.AspNetCore.Mvc;
 namespace HRMS.API.Controllers.Attendance;
 
 [ApiController]
-[Route("api/attendance-regularizations")]
+[Route("api/[controller]")]
 public class AttendanceRegularizationsController : ControllerBase
 {
-    private readonly ISender _sender;
+    private readonly IMediator _mediator;
 
-    public AttendanceRegularizationsController(ISender sender)
+    public AttendanceRegularizationsController(IMediator mediator)
     {
-        _sender = sender;
+        _mediator = mediator;
     }
 
     [HttpPost]
@@ -27,7 +27,7 @@ public class AttendanceRegularizationsController : ControllerBase
         [FromBody] CreateAttendanceRegularizationCommand command,
         CancellationToken cancellationToken)
     {
-        var id = await _sender.Send(
+        var id = await _mediator.Send(
             command,
             cancellationToken);
 
@@ -46,7 +46,7 @@ public class AttendanceRegularizationsController : ControllerBase
                 id,
                 request.Remarks);
 
-        await _sender.Send(
+        await _mediator.Send(
             command,
             cancellationToken);
 
@@ -63,7 +63,7 @@ public class AttendanceRegularizationsController : ControllerBase
                 id,
                 request.Remarks);
 
-        await _sender.Send(
+        await _mediator.Send(
             command,
             cancellationToken);
 
@@ -74,7 +74,7 @@ public class AttendanceRegularizationsController : ControllerBase
     Guid id,
     CancellationToken cancellationToken)
     {
-        var result = await _sender.Send(
+        var result = await _mediator.Send(
             new GetAttendanceRegularizationByIdQuery(id),
             cancellationToken);
 
@@ -98,7 +98,7 @@ public class AttendanceRegularizationsController : ControllerBase
             pageNumber,
             pageSize);
 
-        var result = await _sender.Send(
+        var result = await _mediator.Send(
             query,
             cancellationToken);
 
@@ -117,7 +117,7 @@ public class AttendanceRegularizationsController : ControllerBase
                 request.RequestedCheckOut,
                 request.Reason);
 
-        await _sender.Send(
+        await _mediator.Send(
             command,
             cancellationToken);
 
@@ -128,7 +128,7 @@ public class AttendanceRegularizationsController : ControllerBase
     Guid id,
     CancellationToken cancellationToken)
     {
-        await _sender.Send(
+        await _mediator.Send(
             new DeleteAttendanceRegularizationCommand(id),
             cancellationToken);
 

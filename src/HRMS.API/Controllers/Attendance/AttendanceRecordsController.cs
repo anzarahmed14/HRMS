@@ -11,14 +11,14 @@ using Microsoft.AspNetCore.Mvc;
 namespace HRMS.API.Controllers.Attendance;
 
 [ApiController]
-[Route("api/attendance-records")]
+[Route("api/[controller]")]
 public class AttendanceRecordsController : ControllerBase
 {
-    private readonly ISender _sender;
+    private readonly IMediator _mediator;
 
-    public AttendanceRecordsController(ISender sender)
+    public AttendanceRecordsController(IMediator mediator)
     {
-        _sender = sender;
+        _mediator = mediator;
     }
 
     [HttpPost("process")]
@@ -27,7 +27,7 @@ public class AttendanceRecordsController : ControllerBase
         [FromBody] ProcessAttendanceRecordsCommand command,
         CancellationToken cancellationToken)
     {
-        var count = await _sender.Send(
+        var count = await _mediator.Send(
             command,
             cancellationToken);
 
@@ -45,7 +45,7 @@ public class AttendanceRecordsController : ControllerBase
         Guid id,
         CancellationToken cancellationToken)
     {
-        var result = await _sender.Send(
+        var result = await _mediator.Send(
             new GetAttendanceRecordByIdQuery(id),
             cancellationToken);
 
@@ -63,7 +63,7 @@ public class AttendanceRecordsController : ControllerBase
     [FromQuery] string? status,
     CancellationToken cancellationToken)
     {
-        var result = await _sender.Send(
+        var result = await _mediator.Send(
             new GetAttendanceRecordsQuery(
                 page,
                 employeeId,
@@ -80,7 +80,7 @@ public class AttendanceRecordsController : ControllerBase
     [FromBody] CreateManualAttendanceRecordCommand command,
     CancellationToken cancellationToken)
     {
-        var id = await _sender.Send(
+        var id = await _mediator.Send(
             command,
             cancellationToken);
 
@@ -101,7 +101,7 @@ public class AttendanceRecordsController : ControllerBase
                 "Route ID does not match request ID.");
         }
 
-        await _sender.Send(
+        await _mediator.Send(
             command,
             cancellationToken);
 

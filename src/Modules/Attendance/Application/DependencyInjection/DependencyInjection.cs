@@ -1,8 +1,10 @@
 using FluentValidation;
 using HRMS.BuildingBlocks.Application.Behaviors;
+using HRMS.Modules.Attendance.Application.Features.AttendanceDayStatuses.BusinessRules;
 using HRMS.Modules.Attendance.Application.Features.AttendanceDevices.BusinessRules;
 using HRMS.Modules.Attendance.Application.Features.AttendancePolicies.BusinessRules;
 using HRMS.Modules.Attendance.Application.Features.AttendanceRawLogs.BusinessRules;
+using HRMS.Modules.Attendance.Application.Features.AttendanceRegularizationStatuses.BusinessRules;
 using HRMS.Modules.Attendance.Application.Features.AttendanceRecords.BusinessRules;
 using HRMS.Modules.Attendance.Application.Features.AttendanceShifts.BusinessRules;
 using HRMS.Modules.Attendance.Application.Features.AttendanceSources.BusinessRules;
@@ -43,7 +45,9 @@ public static class DependencyInjection
         services.AddScoped<AttendanceDeviceBusinessRules>();
         services.AddScoped<AttendanceRawLogBusinessRules>();
         services.AddScoped<AttendanceCalendarBusinessRules>();
-        
+        services.AddScoped<AttendanceDayStatusBusinessRules>();
+        services.AddScoped<AttendanceRegularizationStatusBusinessRules>();
+
         return services;
     }
 }

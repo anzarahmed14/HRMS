@@ -6,14 +6,14 @@ using Microsoft.AspNetCore.Mvc;
 namespace HRMS.API.Controllers.Attendance;
 
 [ApiController]
-[Route("api/attendance-raw-logs")]
+[Route("api/[controller]")]
 public class AttendanceRawLogsController : ControllerBase
 {
-    private readonly ISender _sender;
+    private readonly IMediator _mediator;
 
-    public AttendanceRawLogsController(ISender sender)
+    public AttendanceRawLogsController(IMediator mediator)
     {
-        _sender = sender;
+        _mediator = mediator;
     }
 
     [HttpPost]
@@ -22,7 +22,7 @@ public class AttendanceRawLogsController : ControllerBase
         [FromBody] CreateAttendanceRawLogCommand command,
         CancellationToken cancellationToken)
     {
-        var id = await _sender.Send(
+        var id = await _mediator.Send(
             command,
             cancellationToken);
 
@@ -37,7 +37,7 @@ public class AttendanceRawLogsController : ControllerBase
     [FromBody] ImportAttendanceRawLogsCommand command,
     CancellationToken cancellationToken)
     {
-        var count = await _sender.Send(
+        var count = await _mediator.Send(
             command,
             cancellationToken);
 

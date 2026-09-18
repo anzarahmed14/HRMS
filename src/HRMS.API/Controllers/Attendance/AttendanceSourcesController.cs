@@ -11,14 +11,14 @@ using Microsoft.AspNetCore.Mvc;
 namespace HRMS.API.Controllers.Attendance;
 
 [ApiController]
-[Route("api/attendance-sources")]
+[Route("api/[controller]")]
 public class AttendanceSourcesController : ControllerBase
 {
-    private readonly ISender _sender;
+    private readonly IMediator _mediator;
 
-    public AttendanceSourcesController(ISender sender)
+    public AttendanceSourcesController(IMediator mediator)
     {
-        _sender = sender;
+        _mediator = mediator;
     }
 
     [HttpPost]
@@ -27,7 +27,7 @@ public class AttendanceSourcesController : ControllerBase
         [FromBody] CreateAttendanceSourceCommand command,
         CancellationToken cancellationToken)
     {
-        var id = await _sender.Send(
+        var id = await _mediator.Send(
             command,
             cancellationToken);
 
@@ -44,7 +44,7 @@ public class AttendanceSourcesController : ControllerBase
         Guid id,
         CancellationToken cancellationToken)
     {
-        var result = await _sender.Send(
+        var result = await _mediator.Send(
             new GetAttendanceSourceByIdQuery(id),
             cancellationToken);
 
@@ -59,7 +59,7 @@ public class AttendanceSourcesController : ControllerBase
         [FromQuery] PagedRequest request,
         CancellationToken cancellationToken)
     {
-        var result = await _sender.Send(
+        var result = await _mediator.Send(
             new GetAttendanceSourcesQuery(request),
             cancellationToken);
 
@@ -79,7 +79,7 @@ public class AttendanceSourcesController : ControllerBase
                 "Route ID does not match request ID.");
         }
 
-        await _sender.Send(
+        await _mediator.Send(
             command,
             cancellationToken);
 
@@ -92,7 +92,7 @@ public class AttendanceSourcesController : ControllerBase
         Guid id,
         CancellationToken cancellationToken)
     {
-        await _sender.Send(
+        await _mediator.Send(
             new DeleteAttendanceSourceCommand(id),
             cancellationToken);
 

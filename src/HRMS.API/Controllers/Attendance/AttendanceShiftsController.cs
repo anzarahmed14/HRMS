@@ -11,14 +11,14 @@ using Microsoft.AspNetCore.Mvc;
 namespace HRMS.API.Controllers.Attendance;
 
 [ApiController]
-[Route("api/attendance-shifts")]
+[Route("api/[controller]")]
 public class AttendanceShiftsController : ControllerBase
 {
-    private readonly ISender _sender;
+    private readonly IMediator _mediator;
 
-    public AttendanceShiftsController(ISender sender)
+    public AttendanceShiftsController(IMediator mediator)
     {
-        _sender = sender;
+        _mediator = mediator;
     }
 
     [HttpPost]
@@ -27,7 +27,7 @@ public class AttendanceShiftsController : ControllerBase
         [FromBody] CreateAttendanceShiftCommand command,
         CancellationToken cancellationToken)
     {
-        var id = await _sender.Send(
+        var id = await _mediator.Send(
             command,
             cancellationToken);
 
@@ -44,7 +44,7 @@ public class AttendanceShiftsController : ControllerBase
         Guid id,
         CancellationToken cancellationToken)
     {
-        var result = await _sender.Send(
+        var result = await _mediator.Send(
             new GetAttendanceShiftByIdQuery(id),
             cancellationToken);
 
@@ -60,7 +60,7 @@ public class AttendanceShiftsController : ControllerBase
         [FromQuery] PagedRequest request,
         CancellationToken cancellationToken)
     {
-        var result = await _sender.Send(
+        var result = await _mediator.Send(
             new GetAttendanceShiftsQuery(request),
             cancellationToken);
 
@@ -79,7 +79,7 @@ public class AttendanceShiftsController : ControllerBase
                 "Route ID does not match request ID.");
         }
 
-        await _sender.Send(
+        await _mediator.Send(
             command,
             cancellationToken);
 
@@ -91,7 +91,7 @@ public class AttendanceShiftsController : ControllerBase
     Guid id,
     CancellationToken cancellationToken)
     {
-        await _sender.Send(
+        await _mediator.Send(
             new DeleteAttendanceShiftCommand(id),
             cancellationToken);
 

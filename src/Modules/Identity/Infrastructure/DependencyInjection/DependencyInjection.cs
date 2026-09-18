@@ -1,4 +1,6 @@
 using HRMS.Modules.Identity.Application.Abstractions.Security;
+using HRMS.Modules.Identity.Application.Authorization;
+using HRMS.Modules.Identity.Infrastructure.Authorization;
 using HRMS.Modules.Identity.Infrastructure.Security;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -14,6 +16,10 @@ public static class DependencyInjection
     {
         services.AddScoped<IPasswordHasher, PasswordHasher>();
         services.AddScoped<IJwtTokenService, JwtTokenService>();
+
+        services.AddScoped<
+            IPermissionCatalogSynchronizer,
+            PermissionCatalogSynchronizer>();
 
         services.Configure<JwtOptions>(configuration.GetSection("Jwt"));
 

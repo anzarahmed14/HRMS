@@ -1,67 +1,23 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.DependencyInjection;
 namespace HRMS.Modules.Identity.Infrastructure.Authorization;
 
+/// <summary>
+/// Wires up the generic, database-driven permission authorization
+/// infrastructure. Individual permissions are never registered here —
+/// <see cref="PermissionAuthorizationPolicyProvider"/> resolves a policy
+/// for any permission declared via <c>PermissionAuthorizeAttribute</c> on
+/// demand, and <see cref="PermissionAuthorizationHandler"/> makes the
+/// actual authorization decision from the User → UserRole → Role →
+/// RolePermission → Permission relationships.
+/// </summary>
 public static class AuthorizationConfiguration
 {
     public static IServiceCollection AddIdentityAuthorization( this IServiceCollection services)
     {
-        services.AddAuthorization(options =>
-        {
-            options.AddPolicy(
-                "User.ResetPassword",
-                policy =>
-                    policy.Requirements.Add(
-                        new PermissionRequirement("User.ResetPassword")));
+        services.AddAuthorization();
 
-            options.AddPolicy(
-                "Employee.View",
-                policy =>
-                    policy.Requirements.Add(
-                        new PermissionRequirement("Employee.View")));
-
-            options.AddPolicy(
-                "Employee.Create",
-                policy =>
-                    policy.Requirements.Add(
-                        new PermissionRequirement("Employee.Create")));
-
-            options.AddPolicy(
-                "Employee.Update",
-                policy =>
-                    policy.Requirements.Add(
-                        new PermissionRequirement("Employee.Update")));
-
-            options.AddPolicy(
-                "Employee.Delete",
-                policy =>
-                    policy.Requirements.Add(
-                        new PermissionRequirement("Employee.Delete")));
-
-            options.AddPolicy(
-                "Department.View",
-                policy =>
-                    policy.Requirements.Add(
-                        new PermissionRequirement("Department.View")));
-
-            options.AddPolicy(
-                "Department.Create",
-                policy =>
-                    policy.Requirements.Add(
-                        new PermissionRequirement("Department.Create")));
-
-            options.AddPolicy(
-                "Department.Update",
-                policy =>
-                    policy.Requirements.Add(
-                        new PermissionRequirement("Department.Update")));
-
-            options.AddPolicy(
-                "Department.Delete",
-                policy =>
-                    policy.Requirements.Add(
-                        new PermissionRequirement("Department.Delete")));
-        });
+        services.AddSingleton<IAuthorizationPolicyProvider, PermissionAuthorizationPolicyProvider>();
 
         services.AddScoped<
             IAuthorizationHandler,

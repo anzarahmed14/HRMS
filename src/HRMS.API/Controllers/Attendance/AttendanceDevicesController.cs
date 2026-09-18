@@ -14,11 +14,11 @@ namespace HRMS.API.Controllers.Attendance;
 [Route("api/[controller]")]
 public class AttendanceDevicesController : ControllerBase
 {
-    private readonly ISender _sender;
+    private readonly IMediator _mediator;
 
-    public AttendanceDevicesController(ISender sender)
+    public AttendanceDevicesController(IMediator mediator)
     {
-        _sender = sender;
+        _mediator = mediator;
     }
 
     [HttpPost]
@@ -27,7 +27,7 @@ public class AttendanceDevicesController : ControllerBase
         [FromBody] CreateAttendanceDeviceCommand command,
         CancellationToken cancellationToken)
     {
-        var id = await _sender.Send(
+        var id = await _mediator.Send(
             command,
             cancellationToken);
 
@@ -44,7 +44,7 @@ public class AttendanceDevicesController : ControllerBase
         Guid id,
         CancellationToken cancellationToken)
     {
-        var result = await _sender.Send(
+        var result = await _mediator.Send(
             new GetAttendanceDeviceByIdQuery(id),
             cancellationToken);
 
@@ -59,7 +59,7 @@ public class AttendanceDevicesController : ControllerBase
         [FromQuery] PagedRequest request,
         CancellationToken cancellationToken)
     {
-        var result = await _sender.Send(
+        var result = await _mediator.Send(
             new GetAttendanceDevicesQuery(request),
             cancellationToken);
 
@@ -79,7 +79,7 @@ public class AttendanceDevicesController : ControllerBase
                 "Route ID does not match request ID.");
         }
 
-        await _sender.Send(
+        await _mediator.Send(
             command,
             cancellationToken);
 
@@ -92,7 +92,7 @@ public class AttendanceDevicesController : ControllerBase
         Guid id,
         CancellationToken cancellationToken)
     {
-        await _sender.Send(
+        await _mediator.Send(
             new DeleteAttendanceDeviceCommand(id),
             cancellationToken);
 

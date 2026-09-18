@@ -2,6 +2,7 @@ using HRMS.Application.Features.Employees.Commands.CreateEmployee;
 using HRMS.Application.Features.Employees.Commands.UpdateEmployee;
 using HRMS.Application.Features.Employees.Queries.GetEmployeeById;
 using HRMS.Modules.Employee.Application.Features.Employees.Queries.GetEmployees;
+using HRMS.Modules.Identity.Application.Authorization;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -21,7 +22,7 @@ public class EmployeeController : ControllerBase
     }
 
     [HttpGet]
-  //  [Authorize(Policy = "Employee.View")]
+   // [PermissionAuthorize(PermissionNames.Employee.View)]
     public async Task<IActionResult> GetAll(
         CancellationToken cancellationToken)
     {
@@ -33,7 +34,7 @@ public class EmployeeController : ControllerBase
     }
 
     [HttpGet("{id:guid}")]
-    //[Authorize(Policy = "Employee.View")]
+    //[PermissionAuthorize(PermissionNames.Employee.View)]
     public async Task<IActionResult> GetById(
         Guid id,
         CancellationToken cancellationToken)
