@@ -1,6 +1,8 @@
 using HRMS.BuildingBlocks.Application.Abstractions;
 using HRMS.Modules.Identity.Application.Features.Identity.Commands.CreateUser;
 using HRMS.Modules.Identity.Application.Features.Identity.Commands.Login;
+using HRMS.Modules.Identity.Application.Features.Identity.DTOs;
+using HRMS.Modules.Identity.Application.Features.Identity.Queries.GetEffectivePermissions;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -20,14 +22,22 @@ public class AuthController : ControllerBase
     }
     [Authorize]
     [HttpGet("me")]
-    public IActionResult Me()
+    public async Task<IActionResult> Me(CancellationToken cancellationToken)
     {
+        var effectivePermissions = _userContext.UserId.HasValue
+            ? await _mediator.Send(
+                new GetEffectivePermissionsQuery(_userContext.UserId.Value),
+                cancellationToken)
+            : new EffectivePermissionsDto();
+
         return Ok(new
         {
             UserId = _userContext.UserId,
             EmployeeId = _userContext.EmployeeId,
             UserName = _userContext.UserName,
-            IsAuthenticated = _userContext.IsAuthenticated
+            IsAuthenticated = _userContext.IsAuthenticated,
+            Roles = effectivePermissions.Roles,
+            Permissions = effectivePermissions.Permissions
         });
     }
 
